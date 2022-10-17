@@ -4,17 +4,15 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "config.h" 
-#include "display.h"
-#include "ili9486.h"
-
+#include "audio_module.h"
 
 
 TaskHandle_t displayTaskHandle = NULL;
+TaskHandle_t audioTaskHandle = NULL;
 
 void app_main(void)
 {
     printf("Hello world!\n");
 
-    xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", DISPLAY_TASK_STACK_SIZE, NULL, 4, &displayTaskHandle, 1); 
+    xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle , 1);
 }
