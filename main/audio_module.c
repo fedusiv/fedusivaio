@@ -19,12 +19,88 @@
 #include "audio_module.h"
 #include "gpio_config.h"
 
-#define PI              (3.14159265)
+#define PI               (3.14159265)
+#define PI2              (6.28318530)
+#define PIH              (0.63661977)
+
+#define AMOUNT_OF_CHANNELS 2
+#define SAMPLES_BLOCK_SIZE 45
+#define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * AMOUNT_OF_CHANNELS)
+
 
 static i2s_chan_handle_t tx_handle;
 
 static void i2s_init();
 
+typedef enum {
+    OSC_SINE,
+    OSC_SQUARE,
+    OSC_TRIANGLE,
+    OSC_SAW,
+    OSC_NOISE
+}osc_types_e;
+
+float w(float freq_hz)
+{
+    return freq_hz * PI2;
+}
+
+float osc(osc_types_e osc_type, float note_hz, int d_time, float lfo_freq, float lfo_amp)
+{
+    float freq = w(note_hz) * d_time + lfo_amp * note_hz * (sin(w(lfo_freq) * d_time));
+
+    switch(osc_type)
+    {
+        case OSC_SINE: // Sine wave between -1 and +1
+            return sin(freq);
+
+        case OSC_SQUARE: // Square wave between -1 and +1
+            return sin(freq) > 0 ? 1.0 : -1.0;
+
+        case OSC_TRIANGLE: // Triangle wave between -1 and +1
+            return asin(sin(freq)) * PIH;
+
+        case OSC_SAW:
+            return PIH * (note_hz * PI * fmod(d_time, 1.0 / note_hz) - PIH);
+
+        default:
+            return 0.0;
+    }
+}
+
+float envelope(float d_time)
+{
+    return 0.5;
+}
+
+float calc_data(float note_hz, int d_time)
+{
+    float output_freq = envelope(d_time) *
+            (
+            1.0 * osc(OSC_SINE, note_hz, d_time, 5.0, 0.001)
+            + 0.5 * osc(OSC_SAW, note_hz * 2, d_time, 0, 0)
+            );
+
+    return output_freq;
+}
+
+void play()
+{
+    uint32_t data_block[SAMPLES_DATA_SIZE];
+    float d_time_step = 1.0 / 44100;
+    float d_time = 0;
+    size_t sent_data_size = 0;
+    float sample = 0;
+
+    for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
+    {
+        sample = calc_data(440, d_time);
+        data_block[i] = ((int)sample << 8);
+        data_block[i+1] = ((int)sample << 8);
+        d_time += d_time_step;
+    }
+    i2s_channel_write(tx_handle, data_block, sizeof(int) * SAMPLES_DATA_SIZE, &sent_data_size, 10);
+}
 
 void i2s_init()
 {
@@ -35,7 +111,7 @@ void i2s_init()
     * These two helper macros is defined in 'i2s_std.h' which can only be used in STD mode.
     * They can help to specify the slot and clock configurations for initialization or updating */
     i2s_std_config_t std_cfg = {
-        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(48000),
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100),
         .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_24BIT, I2S_SLOT_MODE_STEREO),
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
@@ -61,6 +137,7 @@ void xAudioTask(void * task_parameter)
 
     i2s_init();
     while (1) {
+        play();
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
 
