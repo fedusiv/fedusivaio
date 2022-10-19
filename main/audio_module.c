@@ -17,6 +17,7 @@
 #include "driver/gpio.h"
 
 #include "audio_module.h"
+#include "audio_config.h"
 #include "gpio_config.h"
 
 #define PI               (3.14159265)
@@ -24,9 +25,9 @@
 #define PIH              (0.63661977)
 
 #define AMOUNT_OF_CHANNELS 2
-#define SAMPLES_BLOCK_SIZE 45
-#define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * AMOUNT_OF_CHANNELS)
-
+#define SAMPLES_BLOCK_SIZE 300
+#define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * SAMPLES_BLOCK_SIZE)
+#define I2C_CONVERT 2147483647
 
 static i2s_chan_handle_t tx_handle;
 
@@ -45,20 +46,19 @@ float w(float freq_hz)
     return freq_hz * PI2;
 }
 
-float osc(osc_types_e osc_type, float note_hz, int d_time, float lfo_freq, float lfo_amp)
+float osc(osc_types_e osc_type, float note_hz, float d_time, float lfo_freq, float lfo_amp)
 {
-    float freq = w(note_hz) * d_time + lfo_amp * note_hz * (sin(w(lfo_freq) * d_time));
-
+    float freq = w(note_hz) * d_time + lfo_amp * note_hz * (sinf(w(lfo_freq) * d_time));
     switch(osc_type)
     {
         case OSC_SINE: // Sine wave between -1 and +1
-            return sin(freq);
+            return sinf(freq);
 
         case OSC_SQUARE: // Square wave between -1 and +1
-            return sin(freq) > 0 ? 1.0 : -1.0;
+            return sinf(freq) > 0 ? 1.0 : -1.0;
 
         case OSC_TRIANGLE: // Triangle wave between -1 and +1
-            return asin(sin(freq)) * PIH;
+            return asin(sinf(freq)) * PIH;
 
         case OSC_SAW:
             return PIH * (note_hz * PI * fmod(d_time, 1.0 / note_hz) - PIH);
@@ -73,12 +73,13 @@ float envelope(float d_time)
     return 0.5;
 }
 
-float calc_data(float note_hz, int d_time)
+float calc_data(float note_hz, float d_time)
 {
     float output_freq = envelope(d_time) *
             (
             1.0 * osc(OSC_SINE, note_hz, d_time, 5.0, 0.001)
-            + 0.5 * osc(OSC_SAW, note_hz * 2, d_time, 0, 0)
+            + 0.5 * osc(OSC_SINE, note_hz * 2, d_time, 0, 0)
+            + 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
             );
 
     return output_freq;
@@ -87,19 +88,22 @@ float calc_data(float note_hz, int d_time)
 void play()
 {
     uint32_t data_block[SAMPLES_DATA_SIZE];
-    float d_time_step = 1.0 / 44100;
+    float d_time_step = 1.0 / SAMPLE_RATE;
     float d_time = 0;
     size_t sent_data_size = 0;
     float sample = 0;
+    esp_err_t err;
 
     for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
         sample = calc_data(440, d_time);
-        data_block[i] = ((int)sample << 8);
-        data_block[i+1] = ((int)sample << 8);
+        sample *= I2C_CONVERT;
+        data_block[i] =  (int)sample;//((int)sample << 8);
+        data_block[i+1] = (int)sample;//((int)sample << 8);
         d_time += d_time_step;
     }
-    i2s_channel_write(tx_handle, data_block, sizeof(int) * SAMPLES_DATA_SIZE, &sent_data_size, 10);
+    err = i2s_channel_write(tx_handle, data_block, sizeof(int) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
+    printf("Error: %d \n", err);
 }
 
 void i2s_init()
@@ -111,8 +115,13 @@ void i2s_init()
     * These two helper macros is defined in 'i2s_std.h' which can only be used in STD mode.
     * They can help to specify the slot and clock configurations for initialization or updating */
     i2s_std_config_t std_cfg = {
-        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(44100),
-        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_24BIT, I2S_SLOT_MODE_STEREO),
+        .clk_cfg = 
+        {
+            .clk_src = I2S_CLK_SRC_DEFAULT,
+            .mclk_multiple = I2S_MCLK_MULTIPLE_256,
+            .sample_rate_hz = SAMPLE_RATE,
+        },
+        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
             .bclk = I2S_OUT_BCLK,
