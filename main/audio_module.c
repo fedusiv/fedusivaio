@@ -25,7 +25,7 @@
 #define PIH              (0.63661977)
 
 #define AMOUNT_OF_CHANNELS 2
-#define SAMPLES_BLOCK_SIZE 300
+#define SAMPLES_BLOCK_SIZE 128
 #define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * SAMPLES_BLOCK_SIZE)
 #define I2C_CONVERT 2147483647
 
@@ -70,7 +70,7 @@ float osc(osc_types_e osc_type, float note_hz, float d_time, float lfo_freq, flo
 
 float envelope(float d_time)
 {
-    return 0.5;
+    return 0.1;
 }
 
 float calc_data(float note_hz, float d_time)
@@ -78,8 +78,8 @@ float calc_data(float note_hz, float d_time)
     float output_freq = envelope(d_time) *
             (
             1.0 * osc(OSC_SINE, note_hz, d_time, 5.0, 0.001)
-            + 0.5 * osc(OSC_SINE, note_hz * 2, d_time, 0, 0)
-            + 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
+            //+ 0.5 * osc(OSC_SINE, note_hz * 2, d_time, 0, 0)
+            //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
             );
 
     return output_freq;
@@ -87,22 +87,35 @@ float calc_data(float note_hz, float d_time)
 
 void play()
 {
-    uint32_t data_block[SAMPLES_DATA_SIZE];
+    uint16_t data_block[SAMPLES_DATA_SIZE];
     float d_time_step = 1.0 / SAMPLE_RATE;
     float d_time = 0;
     size_t sent_data_size = 0;
     float sample = 0;
     esp_err_t err;
 
+    // for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
+    // {
+    //     sample = calc_data(440, d_time);
+    //     sample *= I2C_CONVERT;
+    //     data_block[i] =  (short)sample;//((int)sample << 8);
+    //     data_block[i+1] = (short)sample;//((int)sample << 8);
+    //     d_time += d_time_step;
+    // }
+    float p = 0.0f;
+    float phase = w(440) / SAMPLE_RATE;
     for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
-        sample = calc_data(440, d_time);
-        sample *= I2C_CONVERT;
-        data_block[i] =  (int)sample;//((int)sample << 8);
-        data_block[i+1] = (int)sample;//((int)sample << 8);
-        d_time += d_time_step;
+        float sample = (sinf(p) + 1.0f) * 0.2f;
+        p+= phase;
+        if (p >= PI2)
+            p -= PI2;
+        sample *= 32767;
+        data_block[i] = (short)sample;
+        data_block[i+1] = (short)sample;
     }
-    err = i2s_channel_write(tx_handle, data_block, sizeof(int) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
+
+    err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
     printf("Error: %d \n", err);
 }
 
@@ -121,7 +134,7 @@ void i2s_init()
             .mclk_multiple = I2S_MCLK_MULTIPLE_256,
             .sample_rate_hz = SAMPLE_RATE,
         },
-        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
+        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
             .bclk = I2S_OUT_BCLK,
@@ -147,7 +160,6 @@ void xAudioTask(void * task_parameter)
     i2s_init();
     while (1) {
         play();
-        vTaskDelay(1000/portTICK_PERIOD_MS);
     }
 
 }
