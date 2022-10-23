@@ -70,17 +70,17 @@ float osc(osc_types_e osc_type, float note_hz, float d_time, float lfo_freq, flo
 
 float envelope(float d_time)
 {
-    return 0.1;
+    return 0.1f;
 }
 
 float calc_data(float note_hz, float d_time)
 {
-    float output_freq = envelope(d_time) *
+    float output_freq = envelope(d_time) * (1.0f +
             (
-            1.0 * osc(OSC_SINE, note_hz, d_time, 5.0, 0.001)
-            //+ 0.5 * osc(OSC_SINE, note_hz * 2, d_time, 0, 0)
+            1.0 * osc(OSC_SINE, note_hz, d_time, 0, 0)
+            //+ 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
             //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
-            );
+            ) );
 
     return output_freq;
 }
@@ -94,26 +94,30 @@ void play()
     float sample = 0;
     esp_err_t err;
 
-    // for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
-    // {
-    //     sample = calc_data(440, d_time);
-    //     sample *= I2C_CONVERT;
-    //     data_block[i] =  (short)sample;//((int)sample << 8);
-    //     data_block[i+1] = (short)sample;//((int)sample << 8);
-    //     d_time += d_time_step;
-    // }
-    float p = 0.0f;
-    float phase = w(440) / SAMPLE_RATE;
     for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
-        float sample = (sinf(p) + 1.0f) * 0.2f;
-        p+= phase;
-        if (p >= PI2)
-            p -= PI2;
+        sample = calc_data(440, d_time);
         sample *= 32767;
-        data_block[i] = (short)sample;
-        data_block[i+1] = (short)sample;
+        data_block[i] =  (short)sample;//((int)sample << 8);
+        data_block[i+1] = (short)sample;//((int)sample << 8);
+        d_time += d_time_step;
     }
+    // float p = 0.0f;
+    // float phase = w(440) / SAMPLE_RATE;
+    // for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
+    // {
+    //     //float sample = (sinf(d_time * w(440) / SAMPLE_RATE ) + 1.0f) * 0.1f;
+    //     // float freq = w(880) * d_time;
+    //     // float sample = (sinf(freq) + 1.0f) * 0.1f;
+    //     float sample = (sinf(p) + 1.0f) * 0.1f;
+    //     p+= phase;
+    //     if (p >= PI2)
+    //         p -= PI2;
+    //     d_time+= d_time_step;
+    //     sample *= 32767;
+    //     data_block[i] = (short)sample;
+    //     data_block[i+1] = (short)sample;
+    // }
 
     err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
     printf("Error: %d \n", err);
