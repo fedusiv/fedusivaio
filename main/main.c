@@ -5,8 +5,10 @@
 #include <freertos/task.h>
 
 #include "audio_module.h"
+#include "user_input.h"
 
 
+TaskHandle_t userInputHandle = NULL;
 TaskHandle_t displayTaskHandle = NULL;
 TaskHandle_t audioTaskHandle = NULL;
 
@@ -15,6 +17,8 @@ void app_main(void)
     printf("Hello world!\n");
 
     xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle , 1);
+    xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 1024, NULL, 3, &userInputHandle , 0);
+
 
     while(1)
     {

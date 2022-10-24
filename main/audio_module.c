@@ -78,14 +78,14 @@ float calc_data(float note_hz, float d_time)
     float output_freq = envelope(d_time) * (
             (
             1.0 * osc(OSC_SINE, note_hz, d_time, 5, 0.01)
-            //+ 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
+            + 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
             //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
             ) );
 
     return output_freq;
 }
 
-void play()
+void play(float freq_hz)
 {
     uint16_t data_block[SAMPLES_DATA_SIZE];
     float d_time_step = 1.0 / SAMPLE_RATE;
@@ -96,14 +96,15 @@ void play()
 
     for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
-        sample = calc_data(110, d_time);
-        sample *= 32767;
+        sample = calc_data(freq_hz, d_time);
+        //sample *= 32767;
+        sample *= 255;
         data_block[i] =  (short)sample;//((int)sample << 8);
         data_block[i+1] = (short)sample;//((int)sample << 8);
         d_time += d_time_step;
     }
     // float p = 0.0f;
-    // float phase = w(440) / SAMPLE_RATE;
+    // float phase = w(freq_hz) / SAMPLE_RATE;
     // for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
     // {
     //     //float sample = (sinf(d_time * w(440) / SAMPLE_RATE ) + 1.0f) * 0.1f;
@@ -129,7 +130,7 @@ void i2s_init()
     {
         .auto_clear = false,
         .dma_desc_num = 2,
-        .dma_frame_num = SAMPLES_DATA_SIZE * 2,
+        .dma_frame_num = SAMPLES_DATA_SIZE,
         .id = I2S_NUM_0,
         .role = I2S_ROLE_MASTER
     };
@@ -167,10 +168,35 @@ void i2s_init()
 
 void xAudioTask(void * task_parameter)
 {
-
+    gpio_set_direction(GPIO_NUM_34, GPIO_MODE_INPUT);
+    int counter = 0;
+    uint8_t pressed_counter = 0;
     i2s_init();
     while (1) {
-        play();
+        int level = gpio_get_level(GPIO_NUM_34);
+        if(level == 1)
+        {
+            counter++;
+            if(counter > 5)
+            {
+                counter = 0;
+                pressed_counter++;
+                printf("Button pressed %d!\n", pressed_counter);
+                if(pressed_counter > 127)
+                {
+                    play(880);
+                }
+                else
+                {
+                    play(220);
+                }
+            }
+        }
+        else
+        {
+            counter = 0;
+            play(0);
+        }
         vTaskDelay(1/portTICK_PERIOD_MS);
     }
 
