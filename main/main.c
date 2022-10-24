@@ -15,4 +15,9 @@ void app_main(void)
     printf("Hello world!\n");
 
     xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle , 1);
+
+    while(1)
+    {
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
 }
