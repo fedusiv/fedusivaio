@@ -26,7 +26,7 @@
 #define PIH              (0.63661977)
 
 #define AMOUNT_OF_CHANNELS 2
-#define SAMPLES_BLOCK_SIZE 48
+#define SAMPLES_BLOCK_SIZE 256
 #define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * SAMPLES_BLOCK_SIZE)
 #define I2C_CONVERT 2147483647
 
@@ -71,17 +71,17 @@ float osc(osc_types_e osc_type, float note_hz, float d_time, float lfo_freq, flo
 
 float envelope(float d_time)
 {
-    return 0.5f;
+    return 0.9f;
 }
 
 float calc_data(float note_hz, float d_time)
 {
     float output_freq = envelope(d_time) * (
             (
-            1.0 * osc(OSC_SINE, note_hz, d_time, 5, 0.001)
-            + 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
+            1.0 * osc(OSC_SINE, note_hz, d_time, 0, 0)
+            //+ 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
             //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
-            ) );
+            ));
 
     return output_freq;
 }
@@ -99,13 +99,14 @@ void play(float freq_hz)
     {
         sample = calc_data(freq_hz, d_time);
         //sample *= 32767;
+        //sample *= 16383;
         sample *= 255;
         data_block[i] =  (int16_t)sample;
         data_block[i+1] = (int16_t)sample;
         d_time += d_time_step;
     }
 
-    err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
+    err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 10000);
 }
 
 void i2s_init()
@@ -182,6 +183,7 @@ void xAudioTask(void * task_parameter)
                 {
                     cur_note = 5;
                 }
+                printf("CCW %f\n", freq_array[cur_note]);
                 break;
             case OP_ENCODER_CW:
                 cur_note++;
@@ -189,12 +191,13 @@ void xAudioTask(void * task_parameter)
                 {
                     cur_note = 0;
                 }
+                printf("CW %f\n", freq_array[cur_note]);
                 break;
             default:
                 break;
         }
 
-        if(is_play)
+        if(is_play == 1)
         {
             play(freq_array[cur_note]);
         }

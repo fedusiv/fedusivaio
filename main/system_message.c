@@ -14,6 +14,7 @@ void system_message_module_init()
         sys_msg_storage[i].free = 1;
     }
     xSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive( xSemaphore );
 }
 
 void put_message(sys_msg_op_code_e opcode)
@@ -40,7 +41,7 @@ sys_msg_op_code_e pull_message()
     {
         for(int i = 0; i < 10; i++)
         {
-            if( !(sys_msg_storage[i].free) )
+            if( (sys_msg_storage[i].free == 0) )
             {
                sys_msg_storage[i].free = 1;
                op_code = sys_msg_storage[i].op_code;
