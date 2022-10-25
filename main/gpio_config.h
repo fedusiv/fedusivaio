@@ -12,5 +12,9 @@
 #define I2S_OUT_WS 5
 #define I2S_OUT_DO 18
 
+#define ENCODER_A 34
+#define ENCODER_B 35
+#define ENCODER_SWT 26
+
 
 #endif // __GPIO_CONFIG_H__ 

@@ -16,6 +16,7 @@
 #include "driver/i2s_std.h"
 #include "driver/gpio.h"
 
+#include "system_message.h"
 #include "audio_module.h"
 #include "audio_config.h"
 #include "gpio_config.h"
@@ -77,7 +78,7 @@ float calc_data(float note_hz, float d_time)
 {
     float output_freq = envelope(d_time) * (
             (
-            1.0 * osc(OSC_SINE, note_hz, d_time, 5, 0.01)
+            1.0 * osc(OSC_SINE, note_hz, d_time, 5, 0.001)
             + 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
             //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
             ) );
@@ -99,26 +100,10 @@ void play(float freq_hz)
         sample = calc_data(freq_hz, d_time);
         //sample *= 32767;
         sample *= 255;
-        data_block[i] =  (short)sample;//((int)sample << 8);
-        data_block[i+1] = (short)sample;//((int)sample << 8);
+        data_block[i] =  (int16_t)sample;
+        data_block[i+1] = (int16_t)sample;
         d_time += d_time_step;
     }
-    // float p = 0.0f;
-    // float phase = w(freq_hz) / SAMPLE_RATE;
-    // for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
-    // {
-    //     //float sample = (sinf(d_time * w(440) / SAMPLE_RATE ) + 1.0f) * 0.1f;
-    //     // float freq = w(880) * d_time;
-    //     // float sample = (sinf(freq) + 1.0f) * 0.1f;
-    //     float sample = (sinf(p) + 1.0f) * 0.1f;
-    //     p+= phase;
-    //     if (p >= PI2)
-    //         p -= PI2;
-    //     d_time+= d_time_step;
-    //     sample *= 32767;
-    //     data_block[i] = (short)sample;
-    //     data_block[i+1] = (short)sample;
-    // }
 
     err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
 }
@@ -168,33 +153,53 @@ void i2s_init()
 
 void xAudioTask(void * task_parameter)
 {
-    gpio_set_direction(GPIO_NUM_34, GPIO_MODE_INPUT);
-    int counter = 0;
-    uint8_t pressed_counter = 0;
+    sys_msg_op_code_e op_code;
+    int cur_note = 0;
+    uint8_t is_play = 0;
+    float freq_array[6] = 
+    {
+        220.0,
+        329.63,
+        440.0,
+        523.25,
+        659.25,
+        880.00
+    };
+
+
     i2s_init();
+
     while (1) {
-        int level = gpio_get_level(GPIO_NUM_34);
-        if(level == 1)
+        op_code = pull_message();
+        switch (op_code)
         {
-            counter++;
-            if(counter > 5)
-            {
-                counter = 0;
-                pressed_counter++;
-                printf("Button pressed %d!\n", pressed_counter);
-                if(pressed_counter > 127)
+            case OP_BUTTON_PRESSED:
+                is_play = !is_play;
+                break;
+            case OP_ENCODER_CCW:
+                cur_note--;
+                if (cur_note < 0)
                 {
-                    play(880);
+                    cur_note = 5;
                 }
-                else
+                break;
+            case OP_ENCODER_CW:
+                cur_note++;
+                if (cur_note > 5)
                 {
-                    play(220);
+                    cur_note = 0;
                 }
-            }
+                break;
+            default:
+                break;
+        }
+
+        if(is_play)
+        {
+            play(freq_array[cur_note]);
         }
         else
         {
-            counter = 0;
             play(0);
         }
         vTaskDelay(1/portTICK_PERIOD_MS);
