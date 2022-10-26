@@ -62,17 +62,17 @@ float osc(osc_types_e osc_type, float note_hz, float d_time, float lfo_freq, flo
 
 float envelope(float d_time)
 {
-    return 0.5f;
+    return 0.9f;
 }
 
 float calc_data(float note_hz, float d_time)
 {
     float output_freq = envelope(d_time) * (
             (
-            1.0 * osc(OSC_SINE, note_hz, d_time, 5, 0.001)
-            + 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
+            1.0 * osc(OSC_SINE, note_hz, d_time, 0, 0)
+            //+ 0.5 * osc(OSC_SQUARE, note_hz * 2, d_time, 0, 0)
             //+ 0.25 * osc(OSC_SINE, note_hz * 3, d_time, 0, 0)
-            ) );
+            ));
 
     return output_freq;
 }
@@ -172,6 +172,7 @@ void xAudioTask(void * task_parameter)
                 {
                     cur_note = 5;
                 }
+                printf("CCW %f\n", freq_array[cur_note]);
                 break;
             case OP_ENCODER_CW:
                 cur_note++;
@@ -179,12 +180,13 @@ void xAudioTask(void * task_parameter)
                 {
                     cur_note = 0;
                 }
+                printf("CW %f\n", freq_array[cur_note]);
                 break;
             default:
                 break;
         }
 
-        if(is_play)
+        if(is_play == 1)
         {
             play(freq_array[cur_note]);
         }
