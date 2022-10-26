@@ -1,14 +1,4 @@
-/* I2S Example
-
-    This example code will output 100Hz sine wave and triangle wave to 2-channel of I2S driver
-    Every 5 seconds, it will change bits_per_sample [16, 24, 32] for i2s data
-
-    This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-    Unless required by applicable law or agreed to in writing, this
-    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-    CONDITIONS OF ANY KIND, either express or implied.
-*/
+#include <stdint.h>
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -20,15 +10,16 @@
 #include "audio_module.h"
 #include "audio_config.h"
 #include "gpio_config.h"
+#include "common.h"
 
 #define PI               (3.14159265)
 #define PI2              (6.28318530)
 #define PIH              (0.63661977)
 
 #define AMOUNT_OF_CHANNELS 2
-#define SAMPLES_BLOCK_SIZE 48
-#define SAMPLES_DATA_SIZE (AMOUNT_OF_CHANNELS * SAMPLES_BLOCK_SIZE)
-#define I2C_CONVERT 2147483647
+#define SAMPLE_SIZE 2 // size of one sample for 16 bit data
+#define DMA_FRAME_NUM 256 // Amount of data for one WS Click (basically one channel)
+#define SAMPLES_BUFFER_SIZE (AMOUNT_OF_CHANNELS * DMA_FRAME_NUM) // size of one data buffer, which should has two channels's data
 
 static i2s_chan_handle_t tx_handle;
 
@@ -88,24 +79,23 @@ float calc_data(float note_hz, float d_time)
 
 void play(float freq_hz)
 {
-    uint16_t data_block[SAMPLES_DATA_SIZE];
+    uint16_t data_block[SAMPLES_BUFFER_SIZE];
     float d_time_step = 1.0 / SAMPLE_RATE;
     float d_time = 0;
     size_t sent_data_size = 0;
     float sample = 0;
     esp_err_t err;
 
-    for(int i = 0; i < SAMPLES_DATA_SIZE; i+= AMOUNT_OF_CHANNELS)
+    for(int i = 0; i < SAMPLES_BUFFER_SIZE ; i+= AMOUNT_OF_CHANNELS)
     {
         sample = calc_data(freq_hz, d_time);
-        //sample *= 32767;
-        sample *= 255;
+        sample *= 32767;
         data_block[i] =  (int16_t)sample;
         data_block[i+1] = (int16_t)sample;
         d_time += d_time_step;
     }
 
-    err = i2s_channel_write(tx_handle, data_block, sizeof(short) * SAMPLES_DATA_SIZE, &sent_data_size, 1000);
+    err = i2s_channel_write(tx_handle, data_block, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
 }
 
 void i2s_init()
@@ -115,7 +105,7 @@ void i2s_init()
     {
         .auto_clear = false,
         .dma_desc_num = 2,
-        .dma_frame_num = SAMPLES_DATA_SIZE,
+        .dma_frame_num = DMA_FRAME_NUM ,
         .id = I2S_NUM_0,
         .role = I2S_ROLE_MASTER
     };
