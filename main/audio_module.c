@@ -89,13 +89,14 @@ void play(float freq_hz)
     for(int i = 0; i < SAMPLES_BUFFER_SIZE ; i+= AMOUNT_OF_CHANNELS)
     {
         sample = calc_data(freq_hz, d_time);
-        sample *= 32767;
-        data_block[i] =  (int16_t)sample;
-        data_block[i+1] = (int16_t)sample;
+        sample *= 255;
+        data_block[i] =  (uint16_t)sample;
+        data_block[i+1] = (uint16_t)sample;
+
         d_time += d_time_step;
     }
 
-    err = i2s_channel_write(tx_handle, data_block, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
+    err = i2s_channel_write(tx_handle, data_block, sizeof(uint16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
 }
 
 void i2s_init()
@@ -121,7 +122,17 @@ void i2s_init()
             .mclk_multiple = I2S_MCLK_MULTIPLE_256,
             .sample_rate_hz = SAMPLE_RATE,
         },
-        .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
+        .slot_cfg = 
+        {
+            .bit_shift = false,
+            .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
+            .msb_right = false,
+            .slot_bit_width = I2S_SLOT_BIT_WIDTH_16BIT,
+            .slot_mask = I2S_STD_SLOT_BOTH,
+            .slot_mode = I2S_SLOT_MODE_STEREO,
+            .ws_pol = false,
+            .ws_width = I2S_DATA_BIT_WIDTH_16BIT,
+        },
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,
             .bclk = I2S_OUT_BCLK,
