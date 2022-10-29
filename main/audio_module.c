@@ -79,24 +79,27 @@ float calc_data(float note_hz, float d_time)
 
 void play(float freq_hz)
 {
-    uint16_t data_block[SAMPLES_BUFFER_SIZE];
+    int16_t data_block[SAMPLES_BUFFER_SIZE];
     float d_time_step = 1.0 / SAMPLE_RATE;
     float d_time = 0;
     size_t sent_data_size = 0;
     float sample = 0;
     esp_err_t err;
 
-    for(int i = 0; i < SAMPLES_BUFFER_SIZE ; i+= AMOUNT_OF_CHANNELS)
+    for(int i = 0; i < SAMPLES_BUFFER_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
         sample = calc_data(freq_hz, d_time);
         sample *= 255;
-        data_block[i] =  (uint16_t)sample;
-        data_block[i+1] = (uint16_t)sample;
-
+        data_block[i] =  (int16_t)sample;
+        data_block[i+1] = (int16_t)sample;
         d_time += d_time_step;
-    }
+        if( d_time * w(freq_hz) / 44100 > PI2)
+        {
+            d_time = 0;
+        }
 
-    err = i2s_channel_write(tx_handle, data_block, sizeof(uint16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
+    }
+    err = i2s_channel_write(tx_handle, data_block, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
 }
 
 void i2s_init()
@@ -105,8 +108,8 @@ void i2s_init()
     i2s_chan_config_t chan_cfg =
     {
         .auto_clear = false,
-        .dma_desc_num = 2,
-        .dma_frame_num = DMA_FRAME_NUM ,
+        .dma_desc_num = 6,
+        .dma_frame_num = DMA_FRAME_NUM,
         .id = I2S_NUM_0,
         .role = I2S_ROLE_MASTER
     };
@@ -126,7 +129,6 @@ void i2s_init()
         {
             .bit_shift = false,
             .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
-            .msb_right = false,
             .slot_bit_width = I2S_SLOT_BIT_WIDTH_16BIT,
             .slot_mask = I2S_STD_SLOT_BOTH,
             .slot_mode = I2S_SLOT_MODE_STEREO,
@@ -159,7 +161,7 @@ void xAudioTask(void * task_parameter)
     uint8_t is_play = 0;
     float freq_array[6] = 
     {
-        220.0,
+        880.0,
         329.63,
         440.0,
         523.25,

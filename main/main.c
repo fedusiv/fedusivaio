@@ -7,6 +7,7 @@
 #include "audio_module.h"
 #include "user_input.h"
 #include "system_message.h"
+#include "display/display.h"
 
 
 TaskHandle_t userInputHandle = NULL;
@@ -19,8 +20,9 @@ void app_main(void)
 
     system_message_module_init();
 
-    xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle , 1);
-    xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 1024, NULL, 3, &userInputHandle , 0);
+    xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle , 0);
+    //xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 1024, NULL, 3, &userInputHandle , 0);
+    xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", 8092, NULL, 4, &displayTaskHandle , 1);
 
 
     while(1)
