@@ -89,7 +89,7 @@ void play(float freq_hz)
     for(int i = 0; i < SAMPLES_BUFFER_SIZE; i+= AMOUNT_OF_CHANNELS)
     {
         sample = calc_data(freq_hz, d_time);
-        sample *= 255;
+        sample *= 16383;
         data_block[i] =  (int16_t)sample;
         data_block[i+1] = (int16_t)sample;
         d_time += d_time_step;
@@ -161,7 +161,7 @@ void xAudioTask(void * task_parameter)
     uint8_t is_play = 0;
     float freq_array[6] = 
     {
-        880.0,
+        220.0,
         329.63,
         440.0,
         523.25,

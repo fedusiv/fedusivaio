@@ -27,7 +27,7 @@ typedef struct {
 
 static spi_device_handle_t spi_handle;
 DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
-    /* Power contorl B, power control = 0, DC_ENA = 1 */
+ /* Power contorl B, power control = 0, DC_ENA = 1 */
     {0xCF, {0x00, 0x83, 0X30}, 3},
     /* Power on sequence control,
      * cp1 keeps 1 frame, 1st frame enable
@@ -248,7 +248,7 @@ void init_display()
         lcd_cmd(ili_init_cmds[cmd].cmd, false);
         lcd_data(ili_init_cmds[cmd].data, ili_init_cmds[cmd].databytes&0x1F);
         if (ili_init_cmds[cmd].databytes&0x80) {
-            vTaskDelay(100 / portTICK_PERIOD_MS);
+            vTaskDelay(120 / portTICK_PERIOD_MS);
         }
         cmd++;
     }

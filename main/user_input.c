@@ -1,97 +1,117 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "driver/gpio.h"
 
+#include "hal/gpio_types.h"
 #include "user_input.h"
 #include "gpio_config.h"
 #include "system_message.h"
 
-static void encoder_init();
-static void encoder_process();
-
 typedef struct
 {
-    uint32_t pin_clk;
-    uint32_t pin_data;
-    uint32_t pin_switch;
-    uint8_t clk_value;
-    uint8_t data_value;
-    int switch_debouce;
-}encoder_status_t;
+    uint8_t off_state;
+    uint8_t prev_state;
+    uint8_t encoder;
+    buttons_id_e id;
+}button_status_t;
 
-encoder_status_t encoder_1;
+static button_status_t buttons_status[BUTTON_ID_MAX];
+
+static void gpio_init();
+static void buttons_init();
+static void process_buttons();
 
 void xUserInputTask(void * task_parameter)
 {
-    encoder_init();
+    gpio_init();
+    buttons_init();
     while(1)
     {
-        encoder_process();
-        vTaskDelay(1/portTICK_PERIOD_MS);
+        process_buttons();
+        vTaskDelay(10/portTICK_PERIOD_MS);
     }
 }
 
-
-static void encoder_init()
+static void buttons_init()
 {
-    
-    encoder_1.pin_clk = ENCODER_B;
-    encoder_1.pin_data = ENCODER_A;
-    encoder_1.pin_switch = ENCODER_SWT;
-    gpio_set_direction(encoder_1.pin_clk, GPIO_MODE_INPUT);
-    gpio_set_direction(encoder_1.pin_data, GPIO_MODE_INPUT);
-    gpio_set_direction(encoder_1.pin_switch, GPIO_MODE_INPUT);
+    button_status_t * current;
 
-    gpio_set_pull_mode(ENCODER_SWT,GPIO_PULLDOWN_ONLY);
-    //gpio_set_pull_mode(ENCODER_A,GPIO_PULLUP_ONLY);
-    //gpio_set_pull_mode(ENCODER_B,GPIO_PULLUP_ONLY);
-
-
-
-    encoder_1.switch_debouce = 0;
-    encoder_1.clk_value = gpio_get_level(encoder_1.pin_clk);
+    for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
+    {
+        current = &buttons_status[i];
+        switch(i)
+        {
+            case BUTTON_ID_C:
+            case BUTTON_ID_D:
+            case BUTTON_ID_E:
+            case BUTTON_ID_F:
+            case BUTTON_ID_G:
+                current->off_state = 0;
+                current->encoder = 0;
+                break;
+            case BUTTON_ID_ENC_A:
+            case BUTTON_ID_ENC_B:
+                current->off_state = 1;
+                current->encoder = 1;
+                break;
+            case BUTTON_ID_ENC_SWT:
+                current->off_state = 1;
+                current->encoder = 0;
+                break;
+            default:
+                break;
+        }
+        current->prev_state = current->off_state;
+        current->id = i;
+    }
 }
 
-static void encoder_process()
+static void gpio_init()
 {
-    uint8_t current_clk_value;
-    uint8_t can_press = 1;
+    gpio_set_direction(INPUT_CLK, GPIO_MODE_OUTPUT);
+    gpio_set_direction(INPUT_TRIG, GPIO_MODE_OUTPUT);
+    gpio_set_direction(INPUT_SIN, GPIO_MODE_INPUT);
 
-    // Rotation
-    current_clk_value = gpio_get_level(encoder_1.pin_clk);
-    if( (current_clk_value != encoder_1.clk_value) && (current_clk_value == 1) )
+    gpio_set_pull_mode(INPUT_CLK,GPIO_PULLDOWN_ONLY);
+    gpio_set_pull_mode(INPUT_TRIG,GPIO_PULLDOWN_ONLY);
+    gpio_set_pull_mode(INPUT_SIN,GPIO_PULLDOWN_ONLY);
+}
+
+static void process_buttons()
+{
+    uint8_t current_state = 0;
+    uint8_t read_gpio = 0;
+    uint16_t read_result = 0x00;
+    button_status_t * current_button;
+
+    gpio_set_level(INPUT_CLK, 1);
+    gpio_set_level(INPUT_TRIG, 0);
+    gpio_set_level(INPUT_CLK, 0);
+    gpio_set_level(INPUT_TRIG, 1);
+    // now state is saved
+
+    // reading peripheral
+    for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
     {
-        // encoder Tick appeared
-        encoder_1.data_value = gpio_get_level(encoder_1.pin_data);
-        if( encoder_1.data_value != current_clk_value )
-        {
-            // CCW
-            put_message(OP_ENCODER_CCW);
-            printf("CCW enc\n");
-
-        }
-        else
-        {
-            //CW
-            printf("CW enc\n");
-            put_message(OP_ENCODER_CW);
-        }
+        read_gpio  = gpio_get_level(INPUT_SIN);
+        read_result = (read_result & ~(1UL << i)) | (read_gpio << i);
+        gpio_set_level(INPUT_CLK, 1);
+        gpio_set_level(INPUT_CLK, 0);
     }
-    encoder_1.clk_value = current_clk_value;
 
-    // Button
-    if( !gpio_get_level(encoder_1.pin_switch) )
+    // logic parsing
+    // 74165hc sends from h to a 
+    for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
     {
-        encoder_1.switch_debouce++;
-        if(encoder_1.switch_debouce > 500)
+        current_button = &buttons_status[i];
+        current_state = (read_result >> i) & 1U;
+        if(current_state != current_button ->prev_state)
         {
-            encoder_1.switch_debouce = 0;
-            // Button pressed
-            put_message(OP_BUTTON_PRESSED);
-            printf("SWT enc\n");
+
         }
+        current_button->prev_state = current_state;
+
     }
 
 }
