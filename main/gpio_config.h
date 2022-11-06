@@ -24,9 +24,7 @@
 
 typedef enum
 {
-    BUTTON_ID_ENC_SWT,
-    BUTTON_ID_ENC_B,
-    BUTTON_ID_ENC_A,
+    BUTTON_ID_ENC_1,
     BUTTON_ID_G,
     BUTTON_ID_F,
     BUTTON_ID_E,
@@ -34,6 +32,12 @@ typedef enum
     BUTTON_ID_C,
     BUTTON_ID_MAX
 }buttons_id_e;
+
+typedef enum
+{
+    ENCODER_ID_1,
+    ENCODER_ID_MAX
+}encoders_id_e;
 
 
 #endif // __GPIO_CONFIG_H__ 
