@@ -11,6 +11,7 @@
 
 #define PRESS_BUTTON_DEBOUNCE 5
 #define RELEASE_BUTTON_DEBOUNCE 2
+#define SHIFT_REGISTER_OUTPUTS 8 // amount of all outputs connected to shift register
 
 typedef struct
 {
@@ -24,9 +25,10 @@ typedef struct
 
 typedef struct
 {
-    uint8_t prev_state_a;   // previous of a state (data pin)
-    uint8_t prev_state_b;   // previous state of a b pin(clk pin)
-    uint8_t pos_in_register; // position in shift register, assume that it takes two position, next will be also for this encoder
+    uint8_t prev_state_a;   // previous of state a pin
+    uint8_t prev_state_b;   // previous state of b pin
+    uint8_t pos_a; // position of a pin of encoder in register
+    uint8_t pos_b; // position of b pin of encoder in register
     encoders_id_e id; // encoder id
 }encoder_state_t;
 
@@ -40,12 +42,20 @@ button_state_t buttons_state[BUTTON_ID_MAX]=
     {1,1,0,0,1, BUTTON_ID_ENC_1},
 };
 
+encoder_state_t encoders_state[ENCODER_ID_MAX]=
+{
+    {0,0,2,1,ENCODER_ID_1},
+};
+
 static void gpio_init();
 static void process_buttons();
+static void buttons_encoders_init();
+static uint32_t hw_read_inputs();
 
 void xUserInputTask(void * task_parameter)
 {
     gpio_init();
+    buttons_encoders_init();
     while(1)
     {
         process_buttons();
@@ -65,22 +75,34 @@ static void gpio_init()
     gpio_set_pull_mode(INPUT_SIN,GPIO_PULLDOWN_ONLY);
 }
 
-static void process_buttons()
+static void buttons_encoders_init()
 {
-    uint8_t current_state = 0;
+    uint32_t read_result = 0x00;
+    encoder_state_t * encoder;
+
+    // set starting values for encoders
+    read_result = hw_read_inputs();
+    for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
+    {
+        encoder = &encoders_state[i];
+        encoder->prev_state_a = (read_result >> encoder->pos_a) & 1U;
+        encoder->prev_state_b = (read_result >> encoder->pos_b) & 1U;
+    }
+}
+
+static uint32_t hw_read_inputs()
+{
     uint8_t read_gpio = 0;
-    uint16_t read_result = 0x00;
-    uint8_t provide_btn_change = 0; // flag. if 0 do not need to do anything. if 1 need to set, that button changed it's state
-    button_state_t * button;
+    uint32_t read_result = 0x00;
 
     gpio_set_level(INPUT_CLK, 1);
     gpio_set_level(INPUT_TRIG, 0);
     gpio_set_level(INPUT_CLK, 0);
     gpio_set_level(INPUT_TRIG, 1);
-    // now state is saved
+    // now state is saved(locked) inside shift register
 
     // reading peripheral
-    for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
+    for(int i = 0; i < SHIFT_REGISTER_OUTPUTS; i++)
     {
         read_gpio  = gpio_get_level(INPUT_SIN);
         read_result = (read_result & ~(1UL << i)) | (read_gpio << i);
@@ -88,8 +110,44 @@ static void process_buttons()
         gpio_set_level(INPUT_CLK, 0);
     }
 
+    return read_result;
+}
+
+static void process_buttons()
+{
+    uint8_t current_state = 0; // for button
+    uint8_t current_state_a = 0; // for encoder
+    uint8_t current_state_b = 0;// for encoder
+    uint32_t read_result = 0x00;
+    uint8_t provide_btn_change = 0; // flag. if 0 do not need to do anything. if 1 need to set, that button changed it's state
+    button_state_t * button;
+    encoder_state_t * encoder;
+
+    // reading inputs
+    read_result = hw_read_inputs();
+
     // logic parsing
-    // 74165hc sends from h to a 
+    // Encoders parsing
+    for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
+    {
+        encoder = &encoders_state[i];
+        current_state_a = (read_result >> encoder->pos_a) & 1U;
+        current_state_b = (read_result >> encoder->pos_b) & 1U; 
+        if(current_state_a != encoder->prev_state_a)
+        {
+            if(current_state_b != current_state_a)
+            {
+                // ccw send
+            }
+            else
+            {
+                // cw send
+            }
+        }
+        encoder->prev_state_a = current_state_a;
+        encoder->prev_state_b = current_state_b;
+    }
+    // Buttons parsing
     for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
     {
         provide_btn_change = 0; // reset flag
@@ -126,3 +184,4 @@ static void process_buttons()
     }
 
 }
+
