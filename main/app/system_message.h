@@ -22,21 +22,16 @@ typedef enum
     MSG_DST_MAX
 }sys_msg_destination_e;
 
-typedef struct 
-{
+typedef struct _sys_msg_t sys_msg_t;
+struct _sys_msg_t{
     sys_msg_op_code_e op_code;
     uint16_t data;
-}sys_msg_t;
-
-typedef struct
-{
-    sys_msg_t * msg_pnt;
-    struct sys_msg_queue_t * next;
-}sys_msg_queue_t;
+    sys_msg_t * next_pnt;
+};
 
 
 void system_message_module_init();
 void create_message(sys_msg_op_code_e opcode, uint16_t data, sys_msg_destination_e destination);
-sys_msg_op_code_e pull_message();
+void pull_message(sys_msg_destination_e from, sys_msg_t ** msg);
 
 #endif //__SYSTEM_MESSAGE_H__

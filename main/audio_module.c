@@ -173,40 +173,6 @@ void xAudioTask(void * task_parameter)
     i2s_init();
 
     while (1) {
-        op_code = pull_message();
-        switch (op_code)
-        {
-            case OP_BUTTON_PRESSED:
-                is_play = !is_play;
-                break;
-            case OP_ENCODER_CCW:
-                cur_note--;
-                if (cur_note < 0)
-                {
-                    cur_note = 5;
-                }
-                printf("CCW %f\n", freq_array[cur_note]);
-                break;
-            case OP_ENCODER_CW:
-                cur_note++;
-                if (cur_note > 5)
-                {
-                    cur_note = 0;
-                }
-                printf("CW %f\n", freq_array[cur_note]);
-                break;
-            default:
-                break;
-        }
-
-        if(is_play == 1)
-        {
-            play(freq_array[cur_note]);
-        }
-        else
-        {
-            play(0);
-        }
         vTaskDelay(1/portTICK_PERIOD_MS);
     }
 
