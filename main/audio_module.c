@@ -22,6 +22,7 @@
 #define SAMPLES_BUFFER_SIZE (AMOUNT_OF_CHANNELS * DMA_FRAME_NUM) // size of one data buffer, which should has two channels's data
 
 static i2s_chan_handle_t tx_handle;
+static sys_msg_t * message; // pointer to current message on interation
 
 static void i2s_init();
 
@@ -159,20 +160,31 @@ void xAudioTask(void * task_parameter)
     sys_msg_op_code_e op_code;
     int cur_note = 0;
     uint8_t is_play = 0;
+    float note;
     float freq_array[6] = 
     {
-        220.0,
-        329.63,
-        440.0,
+        0.0,
         523.25,
+        587.33,
         659.25,
-        880.00
+        698.46,
+        783.99
     };
 
+    note = freq_array[0];
 
     i2s_init();
 
     while (1) {
+        message = NULL;
+        pull_message(MSG_DST_AU, &message);
+        if(message != NULL)
+        {
+            note = freq_array[message->data[0]];
+            printf("Change note to %f\n", note);
+            relese_message(message);
+        }
+        play(note);
         vTaskDelay(1/portTICK_PERIOD_MS);
     }
 

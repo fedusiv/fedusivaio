@@ -3,15 +3,9 @@
 
 #include <inttypes.h>
 #include <stdint.h>
+#include "op_codes.h"
 
-typedef enum
-{
-    OP_ZERO,
-    OP_BUTTON_PRESSED,
-    OP_ENCODER_CCW,
-    OP_ENCODER_CW,
-    OP_MAX
-}sys_msg_op_code_e;
+#define SYS_MSG_DATA_SIZE 4
 
 typedef enum
 {
@@ -25,13 +19,14 @@ typedef enum
 typedef struct _sys_msg_t sys_msg_t;
 struct _sys_msg_t{
     sys_msg_op_code_e op_code;
-    uint16_t data;
+    uint8_t data[SYS_MSG_DATA_SIZE]; 
     sys_msg_t * next_pnt;
 };
 
 
-void system_message_module_init();
-void create_message(sys_msg_op_code_e opcode, uint16_t data, sys_msg_destination_e destination);
+void system_message_module_init(); // initialization of module, creates queue managment
+void create_message(sys_msg_op_code_e opcode, uint8_t * data, sys_msg_destination_e destination);
 void pull_message(sys_msg_destination_e from, sys_msg_t ** msg);
+void relese_message(sys_msg_t * msg); // release memory, which can be used for other messages
 
 #endif //__SYSTEM_MESSAGE_H__

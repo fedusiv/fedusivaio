@@ -7,7 +7,8 @@
 #include "hal/gpio_types.h"
 #include "user_input.h"
 #include "gpio_config.h"
-#include "system_message.h"
+#include "app/system_message.h"
+#include "op_codes.h"
 
 #define PRESS_BUTTON_DEBOUNCE 5
 #define RELEASE_BUTTON_DEBOUNCE 2
@@ -39,7 +40,7 @@ button_state_t buttons_state[BUTTON_ID_MAX]=
     {0,0,0,0,5, BUTTON_ID_E},
     {0,0,0,0,4, BUTTON_ID_F},
     {0,0,0,0,3, BUTTON_ID_G},
-    {1,1,0,0,1, BUTTON_ID_ENC_1},
+    {1,1,0,0,0, BUTTON_ID_ENC_1},
 };
 
 encoder_state_t encoders_state[ENCODER_ID_MAX]=
@@ -120,6 +121,7 @@ static void process_buttons()
     uint8_t current_state_b = 0;// for encoder
     uint32_t read_result = 0x00;
     uint8_t provide_btn_change = 0; // flag. if 0 do not need to do anything. if 1 need to set, that button changed it's state
+    input_action_t current_action;
     button_state_t * button;
     encoder_state_t * encoder;
 
@@ -138,10 +140,16 @@ static void process_buttons()
             if(current_state_b != current_state_a)
             {
                 // ccw send
+                current_action.id = encoder->id;
+                current_action.opcode = INPUT_OP_ENCODER_CCW; 
+                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
             }
             else
             {
                 // cw send
+                current_action.id = encoder->id;
+                current_action.opcode = INPUT_OP_ENCODER_CW; 
+                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
             }
         }
         encoder->prev_state_a = current_state_a;
@@ -163,14 +171,16 @@ static void process_buttons()
                 if(button->curr_db_press >= PRESS_BUTTON_DEBOUNCE)
                 {
                     provide_btn_change = 1;
+                    button->curr_db_press = 0;
                 }
             }
             else // operation for release button
             {
                 button->curr_db_release++;
-                if(button->curr_db_press >= RELEASE_BUTTON_DEBOUNCE )
+                if(button->curr_db_release >= RELEASE_BUTTON_DEBOUNCE )
                 {
-                    provide_btn_change = 1;
+                    provide_btn_change = 2;
+                    button->curr_db_release = 0;
                 }
             }
         }
@@ -179,6 +189,15 @@ static void process_buttons()
         {
             button->prev_state = current_state;
             // send notification to application manager
+            current_action.id = button->id;
+            if(provide_btn_change == 1)
+            {
+                current_action.opcode = INPUT_OP_BUTTON_PRESSED; 
+            }else
+            {
+                current_action.opcode = INPUT_OP_BUTTON_RELEASED; 
+            }
+            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
         }
 
     }

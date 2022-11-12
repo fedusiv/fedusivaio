@@ -5,6 +5,7 @@
 #include "freertos/semphr.h"
 
 #include "system_message.h"
+#include "op_codes.h"
 
 #define SYS_MSG_ARRAY_SIZE 30
 
@@ -35,7 +36,7 @@ void system_message_module_init()
     xSemaphoreGive( xSemaphore );
 }
 
-void create_message(sys_msg_op_code_e opcode, uint16_t data, sys_msg_destination_e destination)
+void create_message(sys_msg_op_code_e opcode, uint8_t * data, sys_msg_destination_e destination)
 {
     sys_msg_t * msg;
     sys_msg_t * queue_msg;
@@ -46,7 +47,8 @@ void create_message(sys_msg_op_code_e opcode, uint16_t data, sys_msg_destination
         sys_msg_array_pos++;
         // fill with data
         msg->op_code = opcode;
-        msg->data = data;
+        // copy data
+        memcpy(msg->data, data, sizeof(uint8_t) * SYS_MSG_DATA_SIZE);
         // put messages to destination queue
         msg->next_pnt = NULL;
         if(modules_queue_head[destination] == NULL)
