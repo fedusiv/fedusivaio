@@ -4,7 +4,7 @@
 #include <string.h>
 #include "app_manager.h"
 #include "system_message.h"
-#include "../audio_config.h"
+#include "audio/audio_config.h"
 
 static sys_msg_t * message; // pointer to current message on interation
 
@@ -32,7 +32,7 @@ void xAppManagerTask(void * task_parameter)
 
 static void input_process()
 {
-    audion_note_e note = NOTE_ZERO; 
+    audio_note_e note = NOTE_ZERO; 
 
     input_action_t act;
     memcpy(&act, message->data, sizeof(input_action_t));

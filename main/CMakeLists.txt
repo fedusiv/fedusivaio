@@ -5,6 +5,12 @@ set( display_src "display/display.c"
 set( app_src "app/system_message.c"
             "app/app_manager.c"
                 )
+
+set( audio_src "audio/audio_hw.c"
+            "audio/audio_module.c"
+            "audio/sound_engine.c"
+                )
+
 set(include_dirs "."
                  "display"
                  "app"
@@ -12,7 +18,7 @@ set(include_dirs "."
 
 idf_component_register(SRCS "${app_src}"
                             "${display_src}"
-                            "audio_module.c"
+                            "${audio_src}"
                             "user_input.c"
                             "main.c"
                         INCLUDE_DIRS "${include_dirs}"
