@@ -20,7 +20,7 @@ void generate_sound(float note_freq, float * data_buffer)
 {
     float sample;
     float w = 0.0;
-    float d_time;
+    float d_time = 0.0;
     float d_time_step = 0.0;
 
     d_time_step = 1.0 / SAMPLE_RATE;
@@ -37,7 +37,5 @@ void generate_sound(float note_freq, float * data_buffer)
         {
             d_time = 0;
         }
-
     }
-
 }

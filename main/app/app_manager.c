@@ -77,7 +77,7 @@ static void input_process()
             break;
     }
 
-    create_message(OP_PLAY_NOTE, &note, MSG_DST_AU);
+    create_message(OP_PLAY_NOTE, (uint8_t*)&note, MSG_DST_AU);
     printf("Note %d requested\n", note);
 
     

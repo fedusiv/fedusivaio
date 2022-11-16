@@ -4,7 +4,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-#include "audio_module.h"
+#include "audio/audio_module.h"
 #include "user_input.h"
 #include "app/app_manager.h"
 #include "display/display.h"
