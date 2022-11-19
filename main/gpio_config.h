@@ -13,10 +13,6 @@
 #define I2S_OUT_WS 5
 #define I2S_OUT_DO 15
 
-#define ENCODER_A 16
-#define ENCODER_B 17
-#define ENCODER_SWT 18
-
 #define INPUT_SIN 16
 #define INPUT_CLK 17
 #define INPUT_TRIG 18
@@ -24,11 +20,17 @@
 
 typedef enum
 {
-    BUTTON_ID_ENC_1,
+    BUTTON_ID_B,
+    BUTTON_ID_Ab,
+    BUTTON_ID_A,
+    BUTTON_ID_Gb,
     BUTTON_ID_G,
+    BUTTON_ID_Fb,
     BUTTON_ID_F,
     BUTTON_ID_E,
+    BUTTON_ID_Db,
     BUTTON_ID_D,
+    BUTTON_ID_Cb,
     BUTTON_ID_C,
     BUTTON_ID_MAX
 }buttons_id_e;

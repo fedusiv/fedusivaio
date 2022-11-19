@@ -32,7 +32,8 @@ void audio_send(float * buffer)
 
     for(int i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
-        sending_buffer[i] = (uint16_t)buffer[i];
+        buffer[i] *= 255;
+        sending_buffer[i] = (uint16_t)buffer[i]; 
     }
 
     err = i2s_channel_write(tx_handle, sending_buffer, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
@@ -40,7 +41,6 @@ void audio_send(float * buffer)
 
 void i2s_init()
 {
-    //i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
     i2s_chan_config_t chan_cfg =
     {
         .auto_clear = false,

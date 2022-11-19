@@ -5,10 +5,12 @@
 #include "app_manager.h"
 #include "system_message.h"
 #include "audio/audio_config.h"
+#include "gpio_config.h"
 
 static sys_msg_t * message; // pointer to current message on interation
 
 static void input_process();
+static audio_note_e convert_button_to_note(buttons_id_e button);
 
 
 void xAppManagerTask(void * task_parameter)
@@ -45,27 +47,7 @@ static void input_process()
             break;
         case INPUT_OP_BUTTON_PRESSED:
             printf("Button %d pressed\n", act.id);
-            switch(act.id)
-            {
-                case 5:
-                    note = NOTE_C;
-                    break;
-                case 4:
-                    note = NOTE_D;
-                    break;
-                case 3:
-                    note = NOTE_E;
-                    break;
-                case 2:
-                    note = NOTE_F;
-                    break;
-                case 1:
-                    note = NOTE_G;
-                    break;
-                default:
-                    note = NOTE_ZERO;
-                    break;
-            }
+            note = convert_button_to_note(act.id);
             break;
         case INPUT_OP_ENCODER_CCW:
             printf("Encoder %d ccw\n", act.id);
@@ -78,8 +60,56 @@ static void input_process()
     }
 
     create_message(OP_PLAY_NOTE, (uint8_t*)&note, MSG_DST_AU);
-    printf("Note %d requested\n", note);
+    //printf("Note %d requested\n", note);
 
     
+}
+
+
+static audio_note_e convert_button_to_note(buttons_id_e button)
+{
+    audio_note_e note;
+
+    switch(button)
+    {
+        case BUTTON_ID_C:
+            note = NOTE_C;
+            break;
+        case BUTTON_ID_Cb:
+            note = NOTE_Cb;
+            break;
+        case BUTTON_ID_D:
+            note = NOTE_D;
+            break;
+        case BUTTON_ID_Db:
+            note = NOTE_Db;
+            break;
+        case BUTTON_ID_E:
+            note = NOTE_E;
+            break;
+        case BUTTON_ID_F:
+            note = NOTE_F;
+            break;
+        case BUTTON_ID_G:
+            note = NOTE_G;
+            break;
+        case BUTTON_ID_Gb:
+            note = NOTE_Gb;
+            break;
+        case BUTTON_ID_A:
+            note = NOTE_A;
+            break;
+        case BUTTON_ID_Ab:
+            note = NOTE_Ab;
+            break;
+        case BUTTON_ID_B:
+            note = NOTE_B;
+            break;
+        default:
+            note = NOTE_ZERO;
+            break;
+    }
+
+    return note;
 }
 

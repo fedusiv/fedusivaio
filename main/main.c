@@ -22,7 +22,7 @@ void app_main(void)
     xTaskCreatePinnedToCore(xAppManagerTask, "ApplicationManagerTask", 8092, NULL, 2, &appManagerTaskHandle, 0);
     xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle, 0);
     xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 4096, NULL, 3, &userInputHandle, 0);
-    xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", 8092, NULL, 4, &displayTaskHandle, 1);
+    //xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", 8092, NULL, 4, &displayTaskHandle, 1);
 
 
     while(1)

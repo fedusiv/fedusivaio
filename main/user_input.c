@@ -12,7 +12,7 @@
 
 #define PRESS_BUTTON_DEBOUNCE 5
 #define RELEASE_BUTTON_DEBOUNCE 2
-#define SHIFT_REGISTER_OUTPUTS 8 // amount of all outputs connected to shift register
+#define SHIFT_REGISTER_OUTPUTS 16 // amount of all outputs connected to shift register
 
 typedef struct
 {
@@ -35,12 +35,18 @@ typedef struct
 
 button_state_t buttons_state[BUTTON_ID_MAX]=
 {
-    {0,0,0,0,7, BUTTON_ID_C},
-    {0,0,0,0,6, BUTTON_ID_D},
-    {0,0,0,0,5, BUTTON_ID_E},
-    {0,0,0,0,4, BUTTON_ID_F},
-    {0,0,0,0,3, BUTTON_ID_G},
-    {1,1,0,0,0, BUTTON_ID_ENC_1},
+    {0,0,0,0,0, BUTTON_ID_C},
+    {0,0,0,0,1, BUTTON_ID_Cb},
+    {0,0,0,0,2, BUTTON_ID_D},
+    {0,0,0,0,3, BUTTON_ID_Db},
+    {0,0,0,0,4, BUTTON_ID_E},
+    {0,0,0,0,5, BUTTON_ID_F},
+    {0,0,0,0,6, BUTTON_ID_Fb},
+    {0,0,0,0,7, BUTTON_ID_G},
+    {0,0,0,0,8, BUTTON_ID_Gb},
+    {0,0,0,0,9, BUTTON_ID_A},
+    {0,0,0,0,10, BUTTON_ID_Ab},
+    {0,0,0,0,11, BUTTON_ID_B},
 };
 
 encoder_state_t encoders_state[ENCODER_ID_MAX]=
@@ -60,7 +66,7 @@ void xUserInputTask(void * task_parameter)
     while(1)
     {
         process_buttons();
-        vTaskDelay(10/portTICK_PERIOD_MS);
+        vTaskDelay(2/portTICK_PERIOD_MS);
     }
 }
 
@@ -130,31 +136,31 @@ static void process_buttons()
 
     // logic parsing
     // Encoders parsing
-    for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
-    {
-        encoder = &encoders_state[i];
-        current_state_a = (read_result >> encoder->pos_a) & 1U;
-        current_state_b = (read_result >> encoder->pos_b) & 1U; 
-        if(current_state_a != encoder->prev_state_a)
-        {
-            if(current_state_b != current_state_a)
-            {
-                // ccw send
-                current_action.id = encoder->id;
-                current_action.opcode = INPUT_OP_ENCODER_CCW; 
-                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
-            }
-            else
-            {
-                // cw send
-                current_action.id = encoder->id;
-                current_action.opcode = INPUT_OP_ENCODER_CW; 
-                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
-            }
-        }
-        encoder->prev_state_a = current_state_a;
-        encoder->prev_state_b = current_state_b;
-    }
+    //for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
+    //{
+    //    encoder = &encoders_state[i];
+    //    current_state_a = (read_result >> encoder->pos_a) & 1U;
+    //    current_state_b = (read_result >> encoder->pos_b) & 1U; 
+    //    if(current_state_a != encoder->prev_state_a)
+    //    {
+    //        if(current_state_b != current_state_a)
+    //        {
+    //            // ccw send
+    //            current_action.id = encoder->id;
+    //            current_action.opcode = INPUT_OP_ENCODER_CCW; 
+    //            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+    //        }
+    //        else
+    //        {
+    //            // cw send
+    //            current_action.id = encoder->id;
+    //            current_action.opcode = INPUT_OP_ENCODER_CW; 
+    //            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+    //        }
+    //    }
+    //    encoder->prev_state_a = current_state_a;
+    //    encoder->prev_state_b = current_state_b;
+    //}
     // Buttons parsing
     for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
     {
