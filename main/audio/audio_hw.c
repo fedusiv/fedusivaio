@@ -36,7 +36,7 @@ void audio_send(float * buffer)
         sending_buffer[i] = (uint16_t)buffer[i]; 
     }
 
-    err = i2s_channel_write(tx_handle, sending_buffer, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
+    err = i2s_channel_write(tx_handle, sending_buffer, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 10);
 }
 
 void i2s_init()
