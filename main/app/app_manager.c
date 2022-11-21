@@ -90,6 +90,9 @@ static audio_note_e convert_button_to_note(buttons_id_e button)
         case BUTTON_ID_F:
             note = NOTE_F;
             break;
+        case BUTTON_ID_Fb:
+            note = NOTE_Fb;
+            break;
         case BUTTON_ID_G:
             note = NOTE_G;
             break;

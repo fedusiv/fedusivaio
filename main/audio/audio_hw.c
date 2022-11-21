@@ -1,3 +1,4 @@
+#include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2s_std.h"
@@ -23,7 +24,37 @@ static float s_notes_freq[NOTE_MAX][OCTAVE_MAX] = {
     {58.27, 116.54, 233.08, 466.16, 932.33, 1864.66, 3729.31, 7458.62},
     {61.74, 123.47, 246.94, 493.88, 987.77, 1975.53, 3951.07, 7902.13}
 };
-DRAM_ATTR uint16_t sending_buffer[SAMPLES_BUFFER_SIZE];
+int16_t sending_buffer[SAMPLES_BUFFER_SIZE];
+float s_buffer[SAMPLES_BUFFER_SIZE];
+
+
+void play(float freq)
+{
+    float d_time = 0.0;
+    float d_time_step = 1.0 / 44100;
+
+    esp_err_t err;
+    size_t sent_data_size = 0;
+
+    for(int i = 0; i < SAMPLES_BUFFER_SIZE; i+=2)
+    {
+        s_buffer[i] =  sinf(freq * PI2 * d_time); 
+        s_buffer[i+1] =  sinf(freq * PI2 * d_time); 
+        d_time += d_time_step;
+        if( d_time * freq * PI2 / 44100 > PI2)
+        {
+            d_time = 0;
+        }
+    }
+    audio_send(s_buffer);
+
+}
+
+
+float * get_buffer()
+{
+    return s_buffer;
+}
 
 void audio_send(float * buffer)
 {
@@ -33,10 +64,10 @@ void audio_send(float * buffer)
     for(int i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
         buffer[i] *= 255;
-        sending_buffer[i] = (uint16_t)buffer[i]; 
+        sending_buffer[i] = (int16_t)buffer[i]; 
     }
 
-    err = i2s_channel_write(tx_handle, sending_buffer, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 10);
+    err = i2s_channel_write(tx_handle, sending_buffer, sizeof(int16_t) * SAMPLES_BUFFER_SIZE , &sent_data_size, 1000);
 }
 
 void i2s_init()

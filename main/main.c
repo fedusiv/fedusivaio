@@ -19,8 +19,8 @@ void app_main(void)
 {
     printf("Hello world!\n");
 
-    xTaskCreatePinnedToCore(xAppManagerTask, "ApplicationManagerTask", 8092, NULL, 2, &appManagerTaskHandle, 0);
-    xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 4, &audioTaskHandle, 0);
+    xTaskCreatePinnedToCore(xAppManagerTask, "ApplicationManagerTask", 8092, NULL, 4, &appManagerTaskHandle, 0);
+    xTaskCreatePinnedToCore(xAudioTask, "AudioTask", 8092, NULL, 2, &audioTaskHandle, 1);
     xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 4096, NULL, 3, &userInputHandle, 0);
     //xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", 8092, NULL, 4, &displayTaskHandle, 1);
 

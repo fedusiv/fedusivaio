@@ -12,7 +12,7 @@
 #include "common.h"
 
 static sys_msg_t * message; // pointer to current message on interation
-static float s_buffer[SAMPLES_BUFFER_SIZE] = {0.0};
+float note_freq = 0.0;
 
 static void play_note(uint8_t* data);
 static void process_message();
@@ -23,8 +23,8 @@ void play_note(uint8_t* data)
 
     memcpy(&note, data, sizeof(audio_note_e));
 
-    float note_freq = get_note_freq(note, OCTAVE_4);
-    generate_sound(note_freq, s_buffer);
+    note_freq = get_note_freq(note, OCTAVE_5);
+    //generate_sound(note_freq, get_buffer());
 }
 
 void process_message()
@@ -42,8 +42,10 @@ void process_message()
 void xAudioTask(void * task_parameter)
 {
     i2s_init();
-    
+
+
     while (1) {
+        generate_sound(note_freq, get_buffer());
         message = NULL;
         pull_message(MSG_DST_AU, &message);
         if(message != NULL)
@@ -51,7 +53,9 @@ void xAudioTask(void * task_parameter)
             process_message();
             relese_message(message);
         }
-        audio_send(s_buffer);
+        //play(note_freq);
+        audio_send(get_buffer());
+        vTaskDelay(1/portTICK_PERIOD_MS);
     }
 
 }
