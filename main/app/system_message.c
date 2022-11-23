@@ -72,7 +72,7 @@ void pull_message(sys_msg_destination_e from, sys_msg_t ** msg)
 {
     sys_msg_t * msg_q;
     *msg = NULL; // no messages in queue
-    if( xSemaphoreTake( xSemaphore, ( TickType_t ) 10 ) == 1 )
+    if( xSemaphoreTake( xSemaphore, ( TickType_t ) 1 ) == 1 )
     {
         msg_q = modules_queue_head[from];
         if(msg_q != NULL)

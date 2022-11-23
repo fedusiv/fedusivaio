@@ -63,7 +63,7 @@ void audio_send(float * buffer)
 
     for(int i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
-        buffer[i] *= 255;
+        buffer[i] *= 16383;
         sending_buffer[i] = (int16_t)buffer[i]; 
     }
 
