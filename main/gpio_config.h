@@ -13,9 +13,9 @@
 #define GPIO_I2S_WS  5 // word select or left right select
 #define GPIO_I2S_DO   15 // data out
 
-#define INPUT_SIN 16
+#define INPUT_SIN 18
 #define INPUT_CLK 17
-#define INPUT_TRIG 18
+#define INPUT_TRIG 16
 
 
 typedef enum

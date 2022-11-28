@@ -11,9 +11,9 @@
 #include "sound_engine.h"
 
 // allocated fields
-static audio_sample_packed_u sample_pack[SAMPLES_BUFFER_SIZE];
-static float sample_l[SAMPLES_BUFFER_SIZE];
-static float sample_r[SAMPLES_BUFFER_SIZE];
+audio_sample_packed_u sample_pack[SAMPLES_BUFFER_SIZE];
+float sample_l[SAMPLES_BUFFER_SIZE];
+float sample_r[SAMPLES_BUFFER_SIZE];
 
 static sys_msg_t * message; // pointer to current message on interation
 float note_freq = 0.0;
@@ -44,7 +44,6 @@ void xAudioTask(void * task_parameter)
 {
     i2s_init();
     sound_engine_init();
-
 
     while (1) {
         message = NULL;

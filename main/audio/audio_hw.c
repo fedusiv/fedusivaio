@@ -12,6 +12,7 @@ void audio_send(audio_sample_packed_u * sample_pack)
 {
     esp_err_t err;
     size_t bytes_written = 0;
+
     err = i2s_write(I2S_NUM_0, (uint8_t*)&sample_pack[0].sample, 4 * SAMPLES_BUFFER_SIZE, &bytes_written, portMAX_DELAY);
 }
 
@@ -32,7 +33,8 @@ void i2s_init()
         .bck_io_num = GPIO_I2S_BCLK ,
         .ws_io_num = GPIO_I2S_WS,
         .data_out_num = GPIO_I2S_DO,
-        .data_in_num = I2S_PIN_NO_CHANGE
+        .mck_io_num = -1,
+        .data_in_num = I2S_PIN_NO_CHANGE,
     };
     
     i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);   //install and start i2s driver

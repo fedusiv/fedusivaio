@@ -17,7 +17,7 @@ void generate_sound(float * sample_l, float * sample_r, audio_sample_packed_u * 
     memset(sample_r, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
     for(int i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
-        sample_pos += notes_pitch[40];
+        sample_pos += notes_pitch[24];
         signal = sinewave_form[WAVEFORM_I(sample_pos)];
         sample_l[i] = signal * 0.1f;
         sample_r[i] = signal * 0.1f;
@@ -43,7 +43,7 @@ void sound_engine_init()
     for(i = 0; i < NOTES_COUNT; i++)
     {
         tmp_value = ((pow(2.0f, (float)(i) / 12.0f) * NOTE_FREQ_BASE)); 
-        tmp_value2 = (uint32_t)(tmp_value * ((float)(1UL << 32ULL) / ((float)SAMPLE_RATE)));
+        tmp_value2 = (uint32_t)(tmp_value * ((float)(1ULL << 32ULL) / ((float)SAMPLE_RATE)));
         notes_pitch[i] = tmp_value2;
     }
 }
