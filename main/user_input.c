@@ -54,14 +54,14 @@ encoder_state_t encoders_state[ENCODER_ID_MAX]=
     {0,0,2,1,ENCODER_ID_1},
 };
 
-static void gpio_init();
+static void init_gpio();
 static void process_buttons();
 static void buttons_encoders_init();
 static uint32_t hw_read_inputs();
 
 void xUserInputTask(void * task_parameter)
 {
-    gpio_init();
+    init_gpio();
     buttons_encoders_init();
     while(1)
     {
@@ -71,7 +71,7 @@ void xUserInputTask(void * task_parameter)
 }
 
 
-static void gpio_init()
+static void init_gpio()
 {
     gpio_set_direction(INPUT_CLK, GPIO_MODE_OUTPUT);
     gpio_set_direction(INPUT_TRIG, GPIO_MODE_OUTPUT);

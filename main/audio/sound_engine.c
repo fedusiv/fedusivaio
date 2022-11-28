@@ -1,41 +1,49 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 #include "audio_config.h"
 
-static float sine_wave(float freq_hz, float d_time);
+static uint32_t notes_pitch[NOTES_COUNT];
+static float sinewave_form[WAVEFORM_CNT];
 
-float angular_freq(float freq)
+void generate_sound(float * sample_l, float * sample_r, audio_sample_packed_u * sample_pack)
 {
-    return PI2 * freq;
-}
+    uint32_t sample_pos = 0;
+    float signal = 0.0f;
 
-float sine_wave(float freq_hz, float d_time)
-{
-   return sinf( freq_hz * d_time); 
-}
-
-void generate_sound(float note_freq, float * data_buffer)
-{
-    float sample;
-    float w = 0.0;
-    float d_time = 0.0;
-    float d_time_step = 0.0;
-
-    d_time_step = 1.0 / SAMPLE_RATE;
-
-    w = angular_freq(note_freq);
-
-    for(int i = 0; i < SAMPLES_BUFFER_SIZE; i+= AMOUNT_OF_CHANNELS)
+    memset(sample_l, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
+    memset(sample_r, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
+    for(int i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
-        sample = sine_wave(w, d_time);
-        data_buffer[i] =  sample;
-        data_buffer[i+1] = sample;
-        d_time += d_time_step;
-        if( d_time * w / 44100 > PI2)
-        {
-            d_time = 0;
-        }
+        sample_pos += notes_pitch[40];
+        signal = sinewave_form[WAVEFORM_I(sample_pos)];
+        sample_l[i] = signal * 0.1f;
+        sample_r[i] = signal * 0.1f;
+        sample_pack[i].channel[0] = (int16_t)(sample_l[i] * AUDIO_CONVERSION_VAL);
+        sample_pack[i].channel[1] = (int16_t)(sample_r[i] * AUDIO_CONVERSION_VAL);
+    }
+
+}
+
+
+void sound_engine_init()
+{
+    float tmp_value;
+    uint32_t tmp_value2;
+    uint16_t i = 0;
+
+    for(i = 0; i < WAVEFORM_CNT; i++)
+    {
+        tmp_value = sinf(i * PI2 / WAVEFORM_CNT);
+        sinewave_form[i] = tmp_value;
+    }
+
+    for(i = 0; i < NOTES_COUNT; i++)
+    {
+        tmp_value = ((pow(2.0f, (float)(i) / 12.0f) * NOTE_FREQ_BASE)); 
+        tmp_value2 = (uint32_t)(tmp_value * ((float)(1UL << 32ULL) / ((float)SAMPLE_RATE)));
+        notes_pitch[i] = tmp_value2;
     }
 }

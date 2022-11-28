@@ -9,7 +9,11 @@
 #include "audio_config.h"
 #include "audio_hw.h"
 #include "sound_engine.h"
-#include "common.h"
+
+// allocated fields
+static audio_sample_packed_u sample_pack[SAMPLES_BUFFER_SIZE];
+static float sample_l[SAMPLES_BUFFER_SIZE];
+static float sample_r[SAMPLES_BUFFER_SIZE];
 
 static sys_msg_t * message; // pointer to current message on interation
 float note_freq = 0.0;
@@ -22,8 +26,6 @@ void play_note(uint8_t* data)
     audio_note_e note;
 
     memcpy(&note, data, sizeof(audio_note_e));
-
-    note_freq = get_note_freq(note, OCTAVE_5);
 }
 
 void process_message()
@@ -41,6 +43,7 @@ void process_message()
 void xAudioTask(void * task_parameter)
 {
     i2s_init();
+    sound_engine_init();
 
 
     while (1) {
@@ -51,8 +54,8 @@ void xAudioTask(void * task_parameter)
             process_message();
             relese_message(message);
         }
-        generate_sound(note_freq, get_buffer());
-        audio_send(get_buffer());
+        generate_sound(sample_l, sample_r, sample_pack);
+        audio_send(sample_pack);
     }
 
 }

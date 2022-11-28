@@ -4,9 +4,6 @@
 #include "audio_config.h"
 
 void i2s_init();
-void audio_send(float * buffer);
-void play(float freq);
-float get_note_freq(audio_note_e note, audio_octaves_e octave);
-float * get_buffer();
+void audio_send(audio_sample_packed_u * sample_pack);
 
 #endif // __AUDIO_HW_H__

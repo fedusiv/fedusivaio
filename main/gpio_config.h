@@ -9,9 +9,9 @@
 #define DISPLAY_DC_PIN     7
 #define DISPLAY_BCLK_PIN     21
 
-#define I2S_OUT_BCLK 4
-#define I2S_OUT_WS 5
-#define I2S_OUT_DO 15
+#define GPIO_I2S_BCLK 4
+#define GPIO_I2S_WS  5 // word select or left right select
+#define GPIO_I2S_DO   15 // data out
 
 #define INPUT_SIN 16
 #define INPUT_CLK 17
