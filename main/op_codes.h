@@ -8,7 +8,8 @@ typedef enum
     OP_ZERO,
     OP_BUTTON_ACTION,
     OP_ENCODER_ACTION,
-    OP_PLAY_NOTE,
+    OP_NOTE_SET_ON,
+    OP_NOTE_SET_OFF,
     OP_MAX
 }sys_msg_op_code_e;
 

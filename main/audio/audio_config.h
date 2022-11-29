@@ -15,6 +15,9 @@
 #define WAVEFORM_I(i)   (((i) >> (32 - WAVEFORM_RES)) & WAVEFORM_MSK)
 #define NOTE_FREQ_BASE  27.50 // A0
 #define NOTES_COUNT     128
+#define NOTE_OFFSET     3 // basically distance between NOTE_FREQ_BASE and C1
+
+#define POLYPHONY_AMOUNT 4
 
 #define PI               (3.14159265)
 #define PI2              (6.28318530)
@@ -23,7 +26,6 @@
 
 typedef enum _audio_notes_e
 {
-    NOTE_ZERO,
     NOTE_C,
     NOTE_Cb,
     NOTE_D,
@@ -36,6 +38,7 @@ typedef enum _audio_notes_e
     NOTE_A,
     NOTE_Ab,
     NOTE_B,
+    NOTE_ZERO,
     NOTE_MAX
 } audio_note_e;
 

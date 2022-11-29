@@ -18,22 +18,36 @@ float sample_r[SAMPLES_BUFFER_SIZE];
 static sys_msg_t * message; // pointer to current message on interation
 float note_freq = 0.0;
 
-static void play_note(uint8_t* data);
+static void set_note_state(uint8_t * data, uint8_t state);
 static void process_message();
 
-void play_note(uint8_t* data)
+void set_note_state(uint8_t * data, uint8_t state)
 {
     audio_note_e note;
+    uint16_t note_id;
 
     memcpy(&note, data, sizeof(audio_note_e));
+    note_id = get_note_id(note);
+    if(state)
+    {
+        synth_note_on(note_id);
+    }
+    else
+    {
+        synth_note_off(note_id);
+    }
 }
+
 
 void process_message()
 {
     switch(message->op_code)
     {
-        case OP_PLAY_NOTE:
-            play_note(message->data);
+        case OP_NOTE_SET_ON:
+            set_note_state(message->data,1);
+            break;
+        case OP_NOTE_SET_OFF:
+            set_note_state(message->data,0);
             break;
         default:
             break;
@@ -53,7 +67,7 @@ void xAudioTask(void * task_parameter)
             process_message();
             relese_message(message);
         }
-        generate_sound(sample_l, sample_r, sample_pack);
+        synth_process(sample_l, sample_r, sample_pack);
         audio_send(sample_pack);
     }
 
