@@ -38,6 +38,7 @@ void synth_note_on(uint16_t note_id)
     voice->active = 1;
     voice->note_id = note_id;
     voice->sample_pos = 0;
+    adsr_init(&s_adsr_parameters, &voice->adsr);
 
 }
 
@@ -53,7 +54,7 @@ void synth_note_off(uint16_t note_id)
         }
         if(voice->note_id == note_id)
         {
-            voice->active = 0;
+            voice->adsr.state = ADSR_RELEASE;
             break;
         }
     }
@@ -63,6 +64,7 @@ void synth_note_off(uint16_t note_id)
 void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * sample_pack)
 {
     float signal = 0.0f;
+    float adsr_ampl = 0.0f;
     uint16_t i_s, i_v; // index sample, index voice
     synth_voice * voice;
 
@@ -79,8 +81,19 @@ void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * s
             }
             voice->sample_pos += notes_pitch[voice->note_id];
             signal = sinewave_form[WAVEFORM_I(voice->sample_pos)];
-            sample_l[i_s] += signal * s_common_volume;
-            sample_r[i_s] += signal * s_common_volume;
+            // adsr part
+            if(i_s % ADSR_PROCESS_FREQ == 0)
+            {
+                adsr_ampl = adsr_process(&voice->adsr);
+                if(adsr_ampl <= 0.0f)
+                {
+                    // turn off voice
+                    adsr_ampl = 0.0f;
+                    voice->active = 0;
+                }
+            }
+            sample_l[i_s] += (adsr_ampl * signal * s_common_volume);
+            sample_r[i_s] += (adsr_ampl * signal * s_common_volume);
         }
         sample_pack[i_s].channel[0] = (int16_t)(sample_l[i_s] * AUDIO_CONVERSION_VAL);
         sample_pack[i_s].channel[1] = (int16_t)(sample_r[i_s] * AUDIO_CONVERSION_VAL);
@@ -129,13 +142,14 @@ void sound_engine_init()
     }
 
     s_current_octave = OCTAVE_4;
-    s_common_volume = 0.1f;
+    s_common_volume = 0.2;
 
-    s_adsr_parameters.attack.duration = 0.01f;
-    s_adsr_parameters.attack.amplitude = 1.0f;
-    s_adsr_parameters.decay.duration = 0.01f;
-    s_adsr_parameters.decay.amplitude = 0.4f;
-    s_adsr_parameters.release.duration = 0.01f;
+    s_adsr_parameters.attack_duration = 0.1f;
+    s_adsr_parameters.attack_ampl = 1.0f;
+    s_adsr_parameters.decay_duration = 0.1f;
+    s_adsr_parameters.decay_ampl = 0.6f;
+    s_adsr_parameters.release_duration = 0.1f;
+
 }
 
 uint16_t get_note_id(audio_note_e note)

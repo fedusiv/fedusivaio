@@ -10,20 +10,25 @@ typedef enum _adsr_state_e
     ADSR_RELEASE,
 } adsr_state_e;
 
-typedef struct _adsr_element_t
-{
-    float duration; // whole duration
-    float step; // step to change amplitude
-    float amplitude; // destination amplitude
-    float ampl_step; // how amplitude changes in one step
-} adsr_element_t;
-
 typedef struct _adsr_struct_t
 {
     adsr_state_e state;
-    adsr_element_t attack;
-    adsr_element_t decay;
-    adsr_element_t release;
+    uint16_t step;
+    
+    float attack_duration;
+    float attack_step;
+    float attack_ampl;
+
+    float decay_duration;
+    float decay_step;
+    float decay_ampl;
+
+    float release_duration;
+    float release_step;
+
 } adsr_struct_t;
+
+void adsr_init(adsr_struct_t * parameter, adsr_struct_t * adsr);
+float adsr_process(adsr_struct_t * adsr);
 
 #endif // __SOUND_ADSR_H__

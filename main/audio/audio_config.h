@@ -18,6 +18,7 @@
 #define NOTE_OFFSET     3 // basically distance between NOTE_FREQ_BASE and C1
 
 #define POLYPHONY_AMOUNT 4
+#define ADSR_PROCESS_FREQ 4 // frequency of processing adsr, if 4 means, that adsr will process each 4th sample
 
 #define PI               (3.14159265)
 #define PI2              (6.28318530)
