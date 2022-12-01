@@ -8,34 +8,31 @@ static float calculate_adsr_step(float duration, float start_ampl, float end_amp
 
 float adsr_process(adsr_struct_t * adsr)
 {
-    float ampl = 0.0f;
+    float ampl = adsr->last_ampl;
 
-    adsr->step++;
     switch(adsr->state)
     {
         case ADSR_ATTACK:
         {
-            ampl = adsr->step * adsr->attack_step;
+            ampl += adsr->attack_step;
             if(ampl >= adsr->attack_ampl)
             {
                 adsr->state = ADSR_DECAY;
-                adsr->step = 0;
             }
             break;
         }
         case ADSR_DECAY:
         {
-            ampl = adsr->step * adsr->decay_step;
+            ampl += adsr->decay_step;
             if(ampl <= adsr->decay_ampl)
             {
                 adsr->state = ADSR_SUSTAIN;
-                adsr->step = 0;
             }
             break;
         }
         case ADSR_RELEASE:
         {
-            ampl = adsr->step * adsr->release_step;
+            ampl += adsr->release_step;
             break;
         }
         
@@ -45,6 +42,7 @@ float adsr_process(adsr_struct_t * adsr)
             break;
     }
 
+    adsr->last_ampl = ampl;
     return ampl;
 }
 
@@ -63,7 +61,7 @@ void adsr_init(adsr_struct_t * parameter, adsr_struct_t * adsr)
 {
 
     memcpy(adsr, parameter, sizeof(adsr_struct_t));
-    adsr->step = 0;
+    adsr->last_ampl = 0.0;
     adsr->state = ADSR_ATTACK;
 
     adsr->attack_step = calculate_adsr_step(adsr->attack_duration, 0.0f, adsr->attack_ampl);

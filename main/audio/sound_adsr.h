@@ -13,7 +13,7 @@ typedef enum _adsr_state_e
 typedef struct _adsr_struct_t
 {
     adsr_state_e state;
-    uint16_t step;
+    float last_ampl;
     
     float attack_duration;
     float attack_step;
