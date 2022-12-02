@@ -47,11 +47,12 @@ button_state_t buttons_state[BUTTON_ID_MAX]=
     {0,0,0,0,9, BUTTON_ID_A},
     {0,0,0,0,10, BUTTON_ID_Ab},
     {0,0,0,0,11, BUTTON_ID_B},
+    {1,1,0,0,14, BUTTON_ID_ENC_1},
 };
 
 encoder_state_t encoders_state[ENCODER_ID_MAX]=
 {
-    {0,0,2,1,ENCODER_ID_1},
+    {0,0,12,13,ENCODER_ID_1},
 };
 
 static void init_gpio();
@@ -136,31 +137,31 @@ static void process_buttons()
 
     // logic parsing
     // Encoders parsing
-    //for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
-    //{
-    //    encoder = &encoders_state[i];
-    //    current_state_a = (read_result >> encoder->pos_a) & 1U;
-    //    current_state_b = (read_result >> encoder->pos_b) & 1U; 
-    //    if(current_state_a != encoder->prev_state_a)
-    //    {
-    //        if(current_state_b != current_state_a)
-    //        {
-    //            // ccw send
-    //            current_action.id = encoder->id;
-    //            current_action.opcode = INPUT_OP_ENCODER_CCW; 
-    //            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
-    //        }
-    //        else
-    //        {
-    //            // cw send
-    //            current_action.id = encoder->id;
-    //            current_action.opcode = INPUT_OP_ENCODER_CW; 
-    //            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
-    //        }
-    //    }
-    //    encoder->prev_state_a = current_state_a;
-    //    encoder->prev_state_b = current_state_b;
-    //}
+    for(encoders_id_e i = 0; i < ENCODER_ID_MAX; i++)
+    {
+        encoder = &encoders_state[i];
+        current_state_a = (read_result >> encoder->pos_a) & 1U;
+        current_state_b = (read_result >> encoder->pos_b) & 1U; 
+        if(current_state_a != encoder->prev_state_a)
+        {
+            if(current_state_b != current_state_a)
+            {
+                // ccw send
+                current_action.id = encoder->id;
+                current_action.opcode = INPUT_OP_ENCODER_CCW; 
+                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            }
+            else
+            {
+                // cw send
+                current_action.id = encoder->id;
+                current_action.opcode = INPUT_OP_ENCODER_CW; 
+                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            }
+        }
+        encoder->prev_state_a = current_state_a;
+        encoder->prev_state_b = current_state_b;
+    }
     // Buttons parsing
     for(buttons_id_e i = 0; i < BUTTON_ID_MAX; i++)
     {
@@ -171,7 +172,7 @@ static void process_buttons()
         if(current_state != button->prev_state)
         {
             // operation for pressing button
-            if(current_state != buttons_state->off_state)
+            if(current_state != button->off_state)
             {
                 button->curr_db_press++;
                 if(button->curr_db_press >= PRESS_BUTTON_DEBOUNCE)

@@ -147,8 +147,8 @@ void sound_engine_init()
     s_adsr_parameters.attack_duration = 0.1f;
     s_adsr_parameters.attack_ampl = 1.0f;
     s_adsr_parameters.decay_duration = 0.1f;
-    s_adsr_parameters.decay_ampl = 0.6f;
-    s_adsr_parameters.release_duration = 0.1f;
+    s_adsr_parameters.decay_ampl = 0.4f;
+    s_adsr_parameters.release_duration = 0.2f;
 
 }
 

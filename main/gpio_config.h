@@ -32,6 +32,7 @@ typedef enum
     BUTTON_ID_D,
     BUTTON_ID_Cb,
     BUTTON_ID_C,
+    BUTTON_ID_ENC_1,
     BUTTON_ID_MAX
 }buttons_id_e;
 
