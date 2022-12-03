@@ -5,9 +5,9 @@
 #define DISPLAY_SPI_MOSI_PIN 11
 #define DISPLAY_SPI_MISO_PIN  14
 #define DISPLAY_SPI_CLK_PIN   12
-#define DISPLAY_RST_PIN    6
+#define DISPLAY_RST_PIN    13
 #define DISPLAY_DC_PIN     7
-#define DISPLAY_BCLK_PIN     21
+#define DISPLAY_BCLK_PIN     6
 
 #define GPIO_I2S_BCLK 4
 #define GPIO_I2S_WS  5 // word select or left right select

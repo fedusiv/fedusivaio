@@ -9,6 +9,7 @@
 #include "driver/gpio.h"
 
 #include "ili9341.h"
+#include "display_config.h"
 #include "../gpio_config.h"
 
 static void lcd_data(const uint8_t *data, int len);
@@ -86,9 +87,9 @@ DRAM_ATTR static const lcd_init_cmd_t ili_init_cmds[]={
     {0, {0}, 0xff},
 };
 
-uint16_t convert_color(uint8_t r, uint8_t g, uint8_t b)
+uint16_t convert_color(color_t color)
 {
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+    return ((color.r & 0xF8) << 8) | ((color.g & 0xFC) << 3) | (color.b >> 3);
 }
 
 /* Send a command to the LCD. Uses spi_device_polling_transmit, which waits
@@ -176,11 +177,11 @@ void send_lines(int ypos, uint16_t *linedata)
     trans[2].tx_data[0]=0x2B;           //Page address set
     trans[3].tx_data[0]=ypos>>8;        //Start page high
     trans[3].tx_data[1]=ypos&0xff;      //start page low
-    trans[3].tx_data[2]=(ypos+20)>>8;    //end page high
-    trans[3].tx_data[3]=(ypos+20)&0xff;  //end page low
+    trans[3].tx_data[2]=(ypos+SCREEN_SEND_HEIGHT )>>8;    //end page high
+    trans[3].tx_data[3]=(ypos+SCREEN_SEND_HEIGHT )&0xff;  //end page low
     trans[4].tx_data[0]=0x2C;           //memory write
     trans[5].tx_buffer=linedata;        //finally send the line data
-    trans[5].length=320*2*8*20;          //Data length, in bits
+    trans[5].length=320*2*8*SCREEN_SEND_HEIGHT ;          //Data length, in bits
     trans[5].flags=0; //undo SPI_TRANS_USE_TXDATA flag
 
     //Queue all transactions.
@@ -212,7 +213,7 @@ void init_display()
         .sclk_io_num=DISPLAY_SPI_CLK_PIN,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=320*2*20+8
+        .max_transfer_sz=320*2*SCREEN_SEND_HEIGHT +8
     };
     spi_device_interface_config_t devcfg={
         .clock_speed_hz=26*1000*1000,           //Clock out at 26 MHz
@@ -236,6 +237,7 @@ void init_display()
     io_conf.pull_up_en = true;
     gpio_config(&io_conf);
 
+    gpio_set_level(DISPLAY_BCLK_PIN, 0);
     //Reset the display
     gpio_set_level(DISPLAY_RST_PIN, 0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -252,6 +254,6 @@ void init_display()
         }
         cmd++;
     }
-    gpio_set_level(DISPLAY_BCLK_PIN, 0);
+    gpio_set_level(DISPLAY_BCLK_PIN, 1);
 
 }

@@ -50,7 +50,7 @@ static void input_process()
         case INPUT_OP_BUTTON_PRESSED:
             printf("Button %d pressed\n", act.id);
             note = convert_button_to_note(act.id);
-            //create_message(OP_NOTE_SET_ON, (uint8_t*)&note, MSG_DST_AU);
+            create_message(OP_NOTE_SET_ON, (uint8_t*)&note, MSG_DST_AU);
             break;
         case INPUT_OP_ENCODER_CCW:
             printf("Encoder %d ccw\n", act.id);
