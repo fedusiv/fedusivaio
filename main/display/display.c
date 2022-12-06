@@ -2,6 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
+#include "driver/spi_master.h"
 
 #include "display.h"
 #include "display_config.h"
@@ -16,12 +17,12 @@ static void fill_screen(color_t color);
 void xDisplayTask(void * task_parameter)
 {
     init_display();
-    s_screen_buffer = heap_caps_malloc(SCREEN_HEIGHT * SCREEN_WIDTH * 2, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    s_screen_buffer = (uint16_t *)heap_caps_malloc(SCREEN_SIZE * sizeof(uint16_t), MALLOC_CAP_8BIT | MALLOC_CAP_SPIRAM);
     color_t color = 
     {
         .r = 0x00,
-        .g = 0xff,
-        .b = 0x00,
+        .g = 0xfa,
+        .b = 0xfa,
     };
     if(s_screen_buffer  == NULL)
     {
@@ -56,6 +57,9 @@ void screen_update()
 void fill_screen(color_t color)
 {
     uint16_t colour = convert_color(color);
-    memset(s_screen_buffer, colour, sizeof(uint16_t) * SCREEN_SIZE);
+    for(int i =0; i < SCREEN_SIZE; i++)
+    {
+        s_screen_buffer[i] = SPI_SWAP_DATA_TX(colour,16);
+    }
 }
 

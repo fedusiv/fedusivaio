@@ -181,7 +181,7 @@ void send_lines(int ypos, uint16_t *linedata)
     trans[3].tx_data[3]=(ypos+SCREEN_SEND_HEIGHT )&0xff;  //end page low
     trans[4].tx_data[0]=0x2C;           //memory write
     trans[5].tx_buffer=linedata;        //finally send the line data
-    trans[5].length=320*2*8*SCREEN_SEND_HEIGHT ;          //Data length, in bits
+    trans[5].length=SCREEN_WIDTH*2*8*SCREEN_SEND_HEIGHT ;          //Data length, in bits
     trans[5].flags=0; //undo SPI_TRANS_USE_TXDATA flag
 
     //Queue all transactions.
@@ -213,7 +213,7 @@ void init_display()
         .sclk_io_num=DISPLAY_SPI_CLK_PIN,
         .quadwp_io_num=-1,
         .quadhd_io_num=-1,
-        .max_transfer_sz=320*2*SCREEN_SEND_HEIGHT +8
+        .max_transfer_sz= SCREEN_WIDTH * 2 * SCREEN_SEND_HEIGHT,
     };
     spi_device_interface_config_t devcfg={
         .clock_speed_hz=26*1000*1000,           //Clock out at 26 MHz
