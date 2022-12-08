@@ -29,7 +29,7 @@ void i2s_init()
         .dma_buf_len = 64
     };
     
-    static const i2s_pin_config_t pin_config = {
+    i2s_pin_config_t pin_config = {
         .bck_io_num = GPIO_I2S_BCLK ,
         .ws_io_num = GPIO_I2S_WS,
         .data_out_num = GPIO_I2S_DO,

@@ -21,8 +21,8 @@ void xDisplayTask(void * task_parameter)
     color_t color = 
     {
         .r = 0x00,
-        .g = 0xfa,
-        .b = 0xfa,
+        .g = 0x00,
+        .b = 0x00,
     };
     if(s_screen_buffer  == NULL)
     {

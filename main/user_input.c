@@ -12,6 +12,7 @@
 
 #define PRESS_BUTTON_DEBOUNCE 5
 #define RELEASE_BUTTON_DEBOUNCE 2
+#define ENCODER_DEBOUCE 2
 #define SHIFT_REGISTER_OUTPUTS 16 // amount of all outputs connected to shift register
 
 typedef struct
@@ -30,6 +31,7 @@ typedef struct
     uint8_t prev_state_b;   // previous state of b pin
     uint8_t pos_a; // position of a pin of encoder in register
     uint8_t pos_b; // position of b pin of encoder in register
+    int side_dest; // in which side mostly encdoer goes. Kind of denouce mechanism
     encoders_id_e id; // encoder id
 }encoder_state_t;
 
@@ -52,7 +54,7 @@ button_state_t buttons_state[BUTTON_ID_MAX]=
 
 encoder_state_t encoders_state[ENCODER_ID_MAX]=
 {
-    {0,0,12,13,ENCODER_ID_1},
+    {0,0,12,13,0,ENCODER_ID_1},
 };
 
 static void init_gpio();
@@ -95,6 +97,7 @@ static void buttons_encoders_init()
         encoder = &encoders_state[i];
         encoder->prev_state_a = (read_result >> encoder->pos_a) & 1U;
         encoder->prev_state_b = (read_result >> encoder->pos_b) & 1U;
+        encoder->side_dest = 0;
     }
 }
 
@@ -146,19 +149,32 @@ static void process_buttons()
         {
             if(current_state_b != current_state_a)
             {
-                // ccw send
-                current_action.id = encoder->id;
-                current_action.opcode = INPUT_OP_ENCODER_CCW; 
-                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+                // ccw 
+                encoder->side_dest += 1;
             }
             else
             {
-                // cw send
-                current_action.id = encoder->id;
-                current_action.opcode = INPUT_OP_ENCODER_CW; 
-                create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+                // cw 
+                encoder->side_dest -= 1;
             }
         }
+        if(encoder->side_dest >= ENCODER_DEBOUCE)
+        {
+            // ccw operation
+            current_action.id = encoder->id;
+            current_action.opcode = INPUT_OP_ENCODER_CCW; 
+            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            encoder->side_dest = 0;
+        }
+        if(encoder->side_dest <= (-1) * ENCODER_DEBOUCE)
+        {
+            // cw operation
+            current_action.id = encoder->id;
+            current_action.opcode = INPUT_OP_ENCODER_CW; 
+            create_message(OP_BUTTON_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            encoder->side_dest = 0;
+        }
+
         encoder->prev_state_a = current_state_a;
         encoder->prev_state_b = current_state_b;
     }
