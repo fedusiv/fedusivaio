@@ -25,8 +25,8 @@ void i2s_init()
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .tx_desc_auto_clear = false,
-        .dma_buf_count = 8,
-        .dma_buf_len = 64
+        .dma_buf_count = 2, // for transfer does not need
+        .dma_buf_len = SAMPLE_ONE_INTERRUPT // one dma transfer operation. interrupt interval. This is logic amount of samples. One sample is right and left.
     };
     
     i2s_pin_config_t pin_config = {

@@ -3,11 +3,14 @@
 
 #include <stdint.h>
 
+// One sample for 44100 sample rate lenght is 22.67 microseconds
+// Latency of 5ms should be alright
+#define SAMPLE_ONE_INTERRUPT 220 // 200 * 22.67 microseconds = 4.988ms
+#define SAMPLES_BUFFER_SIZE  SAMPLE_ONE_INTERRUPT // amount of samples for one channel
+#define SAMPLE_AMOUNT_OF_CHANNELS 2
+#define SAMPLE_BYTES_SIZE 2 // for 16bit sample size
 #define SAMPLE_RATE 44100
-#define AMOUNT_OF_CHANNELS 2
-#define SAMPLE_SIZE 2 // size of one sample for 16 bit data
-#define DMA_FRAME_NUM 24 // Amount of data for one WS Click (basically one channel)
-#define SAMPLES_BUFFER_SIZE (AMOUNT_OF_CHANNELS * DMA_FRAME_NUM) // size of one data buffer, which should has two channels's data
+#define SAMPLES_BUFFER_SIZE_FULL (SAMPLE_AMOUNT_OF_CHANNELS * SAMPLES_BUFFER_LOGIC_SIZE * SAMPLE_BYTES_SIZE) // size of one data buffer, which should has two channels's data. Size in bytes
 
 #define WAVEFORM_RES    10UL
 #define WAVEFORM_CNT    (1<<WAVEFORM_RES)

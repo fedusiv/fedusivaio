@@ -12,24 +12,24 @@ typedef struct _synth_voice_t
     uint16_t note_id;
     uint32_t sample_pos;
     adsr_struct_t adsr;
-} synth_voice;
+} synth_voice_t;
 
 static uint32_t notes_pitch[NOTES_COUNT];
 static float sinewave_form[WAVEFORM_CNT];
-static synth_voice s_synth_voices[POLYPHONY_AMOUNT];
+static synth_voice_t s_synth_voices[POLYPHONY_AMOUNT];
 static adsr_struct_t s_adsr_parameters;
 static audio_octaves_e s_current_octave;
 static float s_common_volume;
 
 
-static synth_voice * get_free_synth_voice();
+synth_voice_t  * get_free_synth_voice(uint16_t note_id);
 
 
 void synth_note_on(uint16_t note_id)
 {
-    synth_voice * voice;
+    synth_voice_t   * voice;
 
-    voice = get_free_synth_voice();
+    voice = get_free_synth_voice(note_id);
     if(voice == NULL)
     {
         // no available synth voice
@@ -44,7 +44,7 @@ void synth_note_on(uint16_t note_id)
 
 void synth_note_off(uint16_t note_id)
 {
-    synth_voice * voice;
+    synth_voice_t * voice;
     for(uint8_t i = 0; i < POLYPHONY_AMOUNT; i++)
     {
         voice = &s_synth_voices[i];
@@ -66,7 +66,7 @@ void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * s
     float signal = 0.0f;
     float adsr_ampl = 0.0f;
     uint16_t i_s, i_v; // index sample, index voice
-    synth_voice * voice;
+    synth_voice_t  * voice;
 
     memset(sample_l, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
     memset(sample_r, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
@@ -101,17 +101,26 @@ void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * s
 
 }
 
-synth_voice * get_free_synth_voice()
+synth_voice_t * get_free_synth_voice(uint16_t note_id)
 {
-    synth_voice * res = NULL;
+    synth_voice_t * res = NULL;
     uint8_t i = 0;
 
     for(i=0; i < POLYPHONY_AMOUNT; i++)
     {
-        if(s_synth_voices[i].active == 0)
+        if(s_synth_voices[i].active)
+        {
+            if(s_synth_voices[i].note_id == note_id)
+            {
+                // this note is already sounds, so we return this voice for it.
+                res = &s_synth_voices[i];
+                break;
+            }
+
+        }
+        else if(res == NULL)
         {
             res = &s_synth_voices[i];
-            break;
         }
     }
     return res;
@@ -141,14 +150,14 @@ void sound_engine_init()
         s_synth_voices[i].active = 0;
     }
 
-    s_current_octave = OCTAVE_4;
+    s_current_octave = OCTAVE_5;
     s_common_volume = 0.2;
 
     s_adsr_parameters.attack_duration = 0.1f;
     s_adsr_parameters.attack_ampl = 1.0f;
     s_adsr_parameters.decay_duration = 0.1f;
     s_adsr_parameters.decay_ampl = 0.4f;
-    s_adsr_parameters.release_duration = 0.2f;
+    s_adsr_parameters.release_duration = 0.1f;
 
 }
 

@@ -6,10 +6,10 @@
 typedef enum
 {
     OP_ZERO,
-    OP_BUTTON_ACTION,
-    OP_ENCODER_ACTION,
+    OP_USER_INPUT_ACTION,
     OP_NOTE_SET_ON,
     OP_NOTE_SET_OFF,
+    OP_AUDIO_SAMPLES_PROCESSED, // audio sends this opcode when finished calculate it.
     OP_MAX
 }sys_msg_op_code_e;
 

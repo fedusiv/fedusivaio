@@ -7,7 +7,7 @@
 #include "system_message.h"
 #include "op_codes.h"
 
-#define SYS_MSG_ARRAY_SIZE 30
+#define SYS_MSG_ARRAY_SIZE 50
 
 sys_msg_t sys_msg_storage[SYS_MSG_ARRAY_SIZE]; // array in memory to store all messages to communicate through modules
 sys_msg_t * sys_msg_array[SYS_MSG_ARRAY_SIZE]; // array to have access to storages, part of mechanism to provide O(1) access to push and pull
@@ -42,13 +42,25 @@ void create_message(sys_msg_op_code_e opcode, uint8_t * data, sys_msg_destinatio
     sys_msg_t * queue_msg;
     if( xSemaphoreTake( xSemaphore, ( TickType_t ) 1000 ) == 1 )
     {
+        // check if there memory too put in storage
+        if(sys_msg_array_pos >= SYS_MSG_ARRAY_SIZE)
+        {
+            // no more left messages
+            xSemaphoreGive( xSemaphore );
+            return;
+        }
+
         // take memory from storage
         msg = (sys_msg_array[sys_msg_array_pos]);
         sys_msg_array_pos++;
         // fill with data
         msg->op_code = opcode;
         // copy data
-        memcpy(msg->data, data, sizeof(uint8_t) * SYS_MSG_DATA_SIZE);
+        if( data != NULL)
+        {
+            // copy only if pointer to data is not null
+            memcpy(msg->data, data, sizeof(uint8_t) * SYS_MSG_DATA_SIZE);
+        }
         // put messages to destination queue
         msg->next_pnt = NULL;
         if(modules_queue_head[destination] == NULL)

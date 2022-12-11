@@ -9,11 +9,12 @@
 #include "audio_config.h"
 #include "audio_hw.h"
 #include "sound_engine.h"
+#include "../memory/memory_manager.h"
 
 // allocated fields
-audio_sample_packed_u sample_pack[SAMPLES_BUFFER_SIZE];
-float sample_l[SAMPLES_BUFFER_SIZE];
-float sample_r[SAMPLES_BUFFER_SIZE];
+audio_sample_packed_u * sample_pack;
+static float * sample_l;
+static float * sample_r;
 
 static sys_msg_t * message; // pointer to current message on interation
 float note_freq = 0.0;
@@ -58,6 +59,9 @@ void xAudioTask(void * task_parameter)
 {
     i2s_init();
     sound_engine_init();
+    sample_l = get_audio_samples_l();
+    sample_r = get_audio_samples_r();
+    sample_pack = (audio_sample_packed_u*)get_memory_audio_send_buffer();
 
     while (1) {
         message = NULL;
@@ -68,6 +72,7 @@ void xAudioTask(void * task_parameter)
             relese_message(message);
         }
         synth_process(sample_l, sample_r, sample_pack);
+        //create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_APP);
         audio_send(sample_pack);
     }
 

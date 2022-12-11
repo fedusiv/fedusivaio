@@ -10,6 +10,7 @@
 static sys_msg_t * message; // pointer to current message on interation
 
 static void input_process();
+static void cmd_process(); // full process
 static audio_note_e convert_button_to_note(buttons_id_e button);
 
 
@@ -24,13 +25,31 @@ void xAppManagerTask(void * task_parameter)
         pull_message(MSG_DST_APP, &message);
         if(message != NULL)
         {
-            input_process();
+            cmd_process();
             relese_message(message);
         }
         vTaskDelay(1/portTICK_PERIOD_MS);
     }
 }
 
+
+static void cmd_process()
+{
+    switch(message->op_code)
+    {
+        case OP_AUDIO_SAMPLES_PROCESSED:
+            create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_GUI);
+            break;
+
+        // Input operations
+        case OP_USER_INPUT_ACTION:
+            input_process();
+            break;
+                   
+        default:
+            break;
+    }
+}
 
 static void input_process()
 {
