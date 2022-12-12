@@ -10,7 +10,7 @@
 #define SAMPLE_AMOUNT_OF_CHANNELS 2
 #define SAMPLE_BYTES_SIZE 2 // for 16bit sample size
 #define SAMPLE_RATE 44100
-#define SAMPLES_BUFFER_SIZE_FULL (SAMPLE_AMOUNT_OF_CHANNELS * SAMPLES_BUFFER_LOGIC_SIZE * SAMPLE_BYTES_SIZE) // size of one data buffer, which should has two channels's data. Size in bytes
+#define SAMPLES_BUFFER_SIZE_FULL (SAMPLE_AMOUNT_OF_CHANNELS * SAMPLES_BUFFER_SIZE * SAMPLE_BYTES_SIZE) // size of one data buffer, which should has two channels's data. Size in bytes
 
 #define WAVEFORM_RES    10UL
 #define WAVEFORM_CNT    (1<<WAVEFORM_RES)
