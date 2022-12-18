@@ -1,8 +1,8 @@
 #ifndef __SYSTEM_MESSAGE_H__
 #define __SYSTEM_MESSAGE_H__
 
-#include <inttypes.h>
 #include <stdint.h>
+#include "types.h"
 #include "op_codes.h"
 
 #define SYS_MSG_DATA_SIZE 4
@@ -25,7 +25,7 @@ struct _sys_msg_t{
 
 
 void system_message_module_init(); // initialization of module, creates queue managment
-void create_message(sys_msg_op_code_e opcode, uint8_t * data, sys_msg_destination_e destination);
+void create_message(sys_msg_op_code_e opcode, u8 * data, sys_msg_destination_e destination, u16 time_ms); 
 void pull_message(sys_msg_destination_e from, sys_msg_t ** msg);
 void relese_message(sys_msg_t * msg); // release memory, which can be used for other messages
 

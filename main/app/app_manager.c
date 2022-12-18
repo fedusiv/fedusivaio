@@ -38,7 +38,7 @@ static void cmd_process()
     switch(message->op_code)
     {
         case OP_AUDIO_SAMPLES_PROCESSED:
-            create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_GUI);
+            create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_GUI, 10);
             break;
 
         // Input operations
@@ -64,12 +64,16 @@ static void input_process()
         case INPUT_OP_BUTTON_RELEASED:
             printf("Button %d released\n", act.id);
             note = convert_button_to_note(act.id);
-            create_message(OP_NOTE_SET_OFF, (uint8_t*)&note, MSG_DST_AU);
+            create_message(OP_NOTE_SET_OFF, (uint8_t*)&note, MSG_DST_AU, 10);
             break;
         case INPUT_OP_BUTTON_PRESSED:
             printf("Button %d pressed\n", act.id);
+            if(act.id == BUTTON_ID_ENC_1)
+            {
+                break;
+            }
             note = convert_button_to_note(act.id);
-            create_message(OP_NOTE_SET_ON, (uint8_t*)&note, MSG_DST_AU);
+            create_message(OP_NOTE_SET_ON, (uint8_t*)&note, MSG_DST_AU, 10);
             break;
         case INPUT_OP_ENCODER_CCW:
             printf("Encoder %d ccw\n", act.id);

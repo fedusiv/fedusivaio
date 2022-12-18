@@ -9,6 +9,7 @@
 #include "app/app_manager.h"
 #include "display/display.h"
 #include "memory/memory_manager.h"
+#include "timer.h"
 
 
 TaskHandle_t appManagerTaskHandle = NULL;
@@ -19,6 +20,7 @@ TaskHandle_t audioTaskHandle = NULL;
 void app_main(void)
 {
     printf("App started\n");
+    timers_init();
     init_memory_manager();
 
     xTaskCreatePinnedToCore(xAppManagerTask, "ApplicationManagerTask", 8092, NULL, 4, &appManagerTaskHandle, 0);

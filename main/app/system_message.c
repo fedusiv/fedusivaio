@@ -36,11 +36,11 @@ void system_message_module_init()
     xSemaphoreGive( xSemaphore );
 }
 
-void create_message(sys_msg_op_code_e opcode, uint8_t * data, sys_msg_destination_e destination)
+void create_message(sys_msg_op_code_e opcode, u8 * data, sys_msg_destination_e destination, u16 time_ms)
 {
     sys_msg_t * msg;
     sys_msg_t * queue_msg;
-    if( xSemaphoreTake( xSemaphore, ( TickType_t ) 1000 ) == 1 )
+    if( xSemaphoreTake( xSemaphore, time_ms / portTICK_PERIOD_MS) == 1 )
     {
         // check if there memory too put in storage
         if(sys_msg_array_pos >= SYS_MSG_ARRAY_SIZE)
@@ -84,7 +84,7 @@ void pull_message(sys_msg_destination_e from, sys_msg_t ** msg)
 {
     sys_msg_t * msg_q;
     *msg = NULL; // no messages in queue
-    if( xSemaphoreTake( xSemaphore, ( TickType_t ) 1 ) == 1 )
+    if( xSemaphoreTake( xSemaphore, 0 ) == 1 )
     {
         msg_q = modules_queue_head[from];
         if(msg_q != NULL)

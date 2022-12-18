@@ -3,8 +3,9 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/timer.h"
 
+#include "types.h"
+#include "timer.h"
 #include "system_message.h"
 #include "audio_module.h"
 #include "audio_config.h"
@@ -20,10 +21,11 @@ static float * sample_r;
 static sys_msg_t * message; // pointer to current message on interation
 float note_freq = 0.0;
 
-static void set_note_state(uint8_t * data, uint8_t state);
+static void audio_process();
+static void set_note_state(u8 * data, u8 state);
 static void process_message();
 
-void set_note_state(uint8_t * data, uint8_t state)
+void set_note_state(u8 * data, u8 state)
 {
     audio_note_e note;
     uint16_t note_id;
@@ -56,33 +58,48 @@ void process_message()
     }
 }
 
-void audio_timer_init()
+
+void audio_process()
 {
-    timer_config_t config = {
-        .divider = 80,
-        .counter_dir = TIMER_COUNT_UP,
-        .counter_en = TIMER_PAUSE,
-        .alarm_en = TIMER_ALARM_EN,
-        .auto_reload = TIMER_AUTORELOAD_EN,
-    };
-    timer_init(TIMER_GROUP_0, TIMER_0, &config);
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0);
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 0xFFFF);
-    timer_start(TIMER_GROUP_0, TIMER_0);
+    static u32 last_process;
+    u32 current_tick, current_duration;
+    u32 cc,cc1;
+
+    current_tick = get_sys_tick();
+    current_duration = current_tick - last_process;
+
+    if(current_duration < SAMPLE_SEND_PERIOD)
+    {
+        vTaskDelay(1/portTICK_PERIOD_MS);
+        return;
+    }
+
+    // before sending pack everything
+    audio_pack_samples(sample_pack, sample_l, sample_r);
+    cc = get_sys_tick();
+    audio_send(sample_pack);
+    cc1 = get_sys_tick();
+    printf("send %u\n", cc1-cc);
+    last_process = get_sys_tick(); // take time of last transfer procedure
+    synth_process(sample_l,sample_r); // after transfer calculate next buffer
+    // once we calculated samples we can display them
+    //create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_APP,0); 
+    
+
 }
+
 
 void xAudioTask(void * task_parameter)
 {
-    uint64_t timer_val;
 
     i2s_init();
     sound_engine_init();
-    audio_timer_init();
     sample_l = get_audio_samples_l();
     sample_r = get_audio_samples_r();
     sample_pack = (audio_sample_packed_u*)get_memory_audio_send_buffer();
 
     while (1) {
+        // threads communication region
         message = NULL;
         pull_message(MSG_DST_AU, &message);
         if(message != NULL)
@@ -90,12 +107,8 @@ void xAudioTask(void * task_parameter)
             process_message();
             relese_message(message);
         }
-        synth_process(sample_l, sample_r, sample_pack);
-        //create_message(OP_AUDIO_SAMPLES_PROCESSED, NULL, MSG_DST_APP);
-        timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &timer_val);
-        printf("Timer counter: 0x%08x%08x\n", (uint32_t) (timer_val >> 32), (uint32_t)(timer_val));
-        audio_send(sample_pack); // non blocking function
-        vTaskDelay(100/portTICK_PERIOD_MS);
+        // processing and sending audio data
+        audio_process();
     }
 
 }

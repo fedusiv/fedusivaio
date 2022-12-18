@@ -70,30 +70,6 @@ static void display_process_msg()
 
 static void display_draw_soundwave_graph()
 {
-    static uint8_t count = 0;
-
-    uint32_t * data_buf;
-    int16_t *buffer =  s_graph_data_buffer + (count * 48);
-
-    data_buf = get_memory_audio_send_buffer();
-    for(uint8_t i = 0; i < 48; i++)
-    {
-        buffer[i] = data_buf[i] >> 16;
-    }
-    
-    count++;
-    if(count < 2)
-    {
-        return;
-    }
-
-    // draw
-    count = 0;
-    for(uint8_t i = 0; i < 96; i++)
-    {
-        
-    }
-
     
 }
 

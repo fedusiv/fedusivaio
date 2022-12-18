@@ -163,7 +163,7 @@ static void process_buttons()
             // ccw operation
             current_action.id = encoder->id;
             current_action.opcode = INPUT_OP_ENCODER_CCW; 
-            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP, 10);
             encoder->side_dest = 0;
         }
         if(encoder->side_dest <= (-1) * ENCODER_DEBOUCE)
@@ -171,7 +171,7 @@ static void process_buttons()
             // cw operation
             current_action.id = encoder->id;
             current_action.opcode = INPUT_OP_ENCODER_CW; 
-            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP, 10);
             encoder->side_dest = 0;
         }
 
@@ -220,7 +220,7 @@ static void process_buttons()
             {
                 current_action.opcode = INPUT_OP_BUTTON_RELEASED; 
             }
-            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP);
+            create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP, 10);
         }
 
     }

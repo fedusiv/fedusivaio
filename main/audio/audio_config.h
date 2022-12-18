@@ -6,6 +6,7 @@
 // One sample for 44100 sample rate lenght is 22.67 microseconds
 // Latency of 5ms should be alright
 #define SAMPLE_ONE_INTERRUPT 220 // 200 * 22.67 microseconds = 4.988ms
+#define SAMPLE_SEND_PERIOD 200 // in 10us
 #define SAMPLES_BUFFER_SIZE  SAMPLE_ONE_INTERRUPT // amount of samples for one channel
 #define SAMPLE_AMOUNT_OF_CHANNELS 2
 #define SAMPLE_BYTES_SIZE 2 // for 16bit sample size

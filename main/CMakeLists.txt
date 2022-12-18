@@ -25,6 +25,7 @@ idf_component_register(SRCS "${app_src}"
                             "${audio_src}"
                             "${memory_src}"
                             "user_input.c"
+                            "timer.c"
                             "main.c"
                         INCLUDE_DIRS "${include_dirs}"
                         )

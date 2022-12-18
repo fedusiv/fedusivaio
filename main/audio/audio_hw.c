@@ -1,12 +1,24 @@
-#include <math.h>
 #include "audio/audio_config.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2s.h"
 #include "driver/gpio.h"
 
+#include "types.h"
 #include "audio_hw.h"
 #include "gpio_config.h"
+
+
+void audio_pack_samples(audio_sample_packed_u * sample_pack, float * sample_l, float * sample_r)
+{
+    u8 i;
+    
+    for(i = 0; i < SAMPLES_BUFFER_SIZE; i++)
+    {
+        sample_pack[i].channel[0] = (int16_t)(sample_l[i] * AUDIO_CONVERSION_VAL);
+        sample_pack[i].channel[1] = (int16_t)(sample_r[i] * AUDIO_CONVERSION_VAL);
+    }
+}
 
 void audio_send(audio_sample_packed_u * sample_pack)
 {
@@ -25,7 +37,7 @@ void i2s_init()
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .tx_desc_auto_clear = false,
-        .dma_buf_count = 2, // for transfer does not need
+        .dma_buf_count = 8, // for transfer does not need
         .dma_buf_len = SAMPLE_ONE_INTERRUPT // one dma transfer operation. interrupt interval. This is logic amount of samples. One sample is right and left.
     };
     

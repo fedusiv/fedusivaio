@@ -61,7 +61,7 @@ void synth_note_off(uint16_t note_id)
 }
 
 
-void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * sample_pack)
+void synth_process(float * sample_l, float * sample_r)
 {
     float signal = 0.0f;
     float adsr_ampl = 0.0f;
@@ -95,8 +95,6 @@ void synth_process(float * sample_l, float * sample_r, audio_sample_packed_u * s
             sample_l[i_s] += (adsr_ampl * signal * s_common_volume);
             sample_r[i_s] += (adsr_ampl * signal * s_common_volume);
         }
-        sample_pack[i_s].channel[0] = (int16_t)(sample_l[i_s] * AUDIO_CONVERSION_VAL);
-        sample_pack[i_s].channel[1] = (int16_t)(sample_r[i_s] * AUDIO_CONVERSION_VAL);
     }
 
 }
