@@ -79,7 +79,7 @@ void audio_process()
     cc = get_sys_tick();
     audio_send(sample_pack);
     cc1 = get_sys_tick();
-    printf("send %u\n", cc1-cc);
+    //printf("send %u\n", cc1-cc);
     last_process = get_sys_tick(); // take time of last transfer procedure
     synth_process(sample_l,sample_r); // after transfer calculate next buffer
     // once we calculated samples we can display them
