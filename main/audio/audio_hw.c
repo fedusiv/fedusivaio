@@ -4,15 +4,16 @@
 #include "driver/gpio.h"
 
 #include "audio_config.h"
-#include "types.h"
 #include "audio_hw.h"
 #include "gpio_config.h"
 
 static i2s_chan_handle_t tx_handle;
+static u32 sent_result = 0;
+bool tx_on_sent_dma_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx);
 
 void audio_pack_samples(audio_sample_packed_u * sample_pack, float * sample_l, float * sample_r)
 {
-    u8 i;
+    u16 i;
     
     for(i = 0; i < SAMPLES_BUFFER_SIZE; i++)
     {
@@ -23,24 +24,31 @@ void audio_pack_samples(audio_sample_packed_u * sample_pack, float * sample_l, f
 
 void audio_send(audio_sample_packed_u * sample_pack)
 {
-    esp_err_t err;
     size_t bytes_written = 0;
 
-    err = i2s_channel_write(tx_handle, (u8*)&sample_pack[0].sample, 4 * SAMPLES_BUFFER_SIZE, &bytes_written, 1000);
-    if(err != ESP_OK)
-    {
-        printf("Issue with i2s write, error code is %d\n", err);
-    }
+    i2s_channel_write(tx_handle, (u8*)&sample_pack[0].sample, 4 * SAMPLES_BUFFER_SIZE, &bytes_written, portMAX_DELAY);
+}
+
+
+u32 get_sent_result()
+{
+    return sent_result;
+}
+
+bool tx_on_sent_dma_callback(i2s_chan_handle_t handle, i2s_event_data_t *event, void *user_ctx)
+{
+    sent_result++;
+    return 0;
 }
 
 void i2s_init()
-{
+{   
     i2s_chan_config_t chan_cfg = 
     {
         .auto_clear = false,
         .id = I2S_NUM_0,
         .role = I2S_ROLE_MASTER,
-        .dma_desc_num = 2,
+        .dma_desc_num = 4,
         .dma_frame_num = SAMPLES_BUFFER_SIZE,
     };
     ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, &tx_handle, NULL));
@@ -61,7 +69,13 @@ void i2s_init()
             },
         },
     };
+    i2s_event_callbacks_t tx_handle_callbacks = {
+        .on_sent = tx_on_sent_dma_callback,
+    };
+    
+
     ESP_ERROR_CHECK(i2s_channel_init_std_mode(tx_handle, &std_cfg));
+    i2s_channel_register_event_callback(tx_handle, &tx_handle_callbacks , NULL);
     i2s_channel_enable(tx_handle);
 }
 

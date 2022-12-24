@@ -28,9 +28,4 @@ void app_main(void)
     xTaskCreatePinnedToCore(xUserInputTask, "UserInputTask", 4096, NULL, 3, &userInputHandle, 0);
     xTaskCreatePinnedToCore(xDisplayTask, "DisplayTask", 8092, NULL, 4, &displayTaskHandle, 0);
 
-
-    while(1)
-    {
-        vTaskDelay(1000/portTICK_PERIOD_MS);
-    }
 }

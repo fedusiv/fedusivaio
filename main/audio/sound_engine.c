@@ -21,9 +21,7 @@ static adsr_struct_t s_adsr_parameters;
 static audio_octaves_e s_current_octave;
 static float s_common_volume;
 
-
 synth_voice_t  * get_free_synth_voice(uint16_t note_id);
-
 
 void synth_note_on(uint16_t note_id)
 {

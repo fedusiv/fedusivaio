@@ -6,7 +6,7 @@
 // One sample for 44100 sample rate lenght is 22.67 microseconds
 // Latency of 5ms should be alright
 #define SAMPLE_ONE_INTERRUPT 220 // 200 * 22.67 microseconds = 4.988ms
-#define SAMPLE_SEND_PERIOD 200 // in 10us
+#define SAMPLE_SEND_PERIOD 4500 // in 1us
 #define SAMPLES_BUFFER_SIZE  SAMPLE_ONE_INTERRUPT // amount of samples for one channel
 #define SAMPLE_AMOUNT_OF_CHANNELS 2
 #define SAMPLE_BYTES_SIZE 2 // for 16bit sample size
@@ -60,6 +60,13 @@ typedef enum _audio_octaves_e
     OCTAVE_MAX
 }audio_octaves_e;
 
+typedef enum _audio_waveform_types_e
+{
+    WAVEFORM_TYPE_SINE,
+    WAVEFORM_TYPE_SAW,
+    WAVEFORM_TYPE_SQUARE,
+    WAVEFORM_TYPE_MAX,
+}audio_waveform_types_e;
 
 typedef union _audio_sample_packed_u
 {

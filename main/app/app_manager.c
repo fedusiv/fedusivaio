@@ -6,6 +6,7 @@
 #include "system_message.h"
 #include "audio/audio_config.h"
 #include "gpio_config.h"
+#include "timer.h"
 
 static sys_msg_t * message; // pointer to current message on interation
 
@@ -16,7 +17,6 @@ static audio_note_e convert_button_to_note(buttons_id_e button);
 
 void xAppManagerTask(void * task_parameter)
 {
-
     system_message_module_init();
 
     while(1)
