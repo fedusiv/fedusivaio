@@ -12,7 +12,7 @@ void timers_init()
     gptimer_config_t timer_config = {
     .clk_src = GPTIMER_CLK_SRC_DEFAULT, // APB
     .direction = GPTIMER_COUNT_UP,
-    .resolution_hz = 1 * 1000 * 1000, // 1 MHZ, 1 tick = 1us
+    .resolution_hz = SYS_TIMER_RES, // 1 MHZ, 1 tick = 1us
     };
 
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));

@@ -68,21 +68,20 @@ void audio_process()
     curr_tick = get_sys_tick();
     if(curr_tick - s_last_send_tick > s_send_period_wait)
     {
-    s_last_send_tick = get_sys_tick();
-    send_time = get_sys_tick();
-    audio_send(sample_pack);
-    send_time = get_sys_tick() - send_time;
-    if(send_time > 100)
-    {
-        s_send_period_wait = SAMPLE_SEND_PERIOD;
-    }
-    else
-    {
-        s_send_period_wait = 4000;
-    }
-    printf("Send: %u\n", send_time);
-    synth_process(sample_l,sample_r); // after transfer calculate next buffer
-    audio_pack_samples(sample_pack, sample_l, sample_r);
+        s_last_send_tick = get_sys_tick();
+        send_time = get_sys_tick();
+        audio_send(sample_pack);
+        send_time = get_sys_tick() - send_time;
+        if(send_time > 100)
+        {
+            s_send_period_wait = SAMPLE_SEND_PERIOD;
+        }
+        else
+        {
+            s_send_period_wait = 4000;
+        }
+        synth_process(sample_l,sample_r); // after transfer calculate next buffer
+        audio_pack_samples(sample_pack, sample_l, sample_r);
     }
 }
 

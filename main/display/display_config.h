@@ -6,7 +6,7 @@
 #define SCREEN_HEIGHT 240
 #define SCREEN_WIDTH 320
 #define SCREEN_SIZE SCREEN_HEIGHT * SCREEN_WIDTH
-#define SCREEN_SEND_HEIGHT 20
+#define SCREEN_SEND_HEIGHT 40
 
 typedef struct _color_t
 {

@@ -8,4 +8,6 @@ typedef unsigned int u32;
 typedef uint16_t u16;
 typedef uint8_t u8;
 
+typedef int16_t i16;
+
 #endif // __TYPES_H__

@@ -53,6 +53,10 @@ void create_message(sys_msg_op_code_e opcode, u8 * data, sys_msg_destination_e d
         // take memory from storage
         msg = (sys_msg_array[sys_msg_array_pos]);
         sys_msg_array_pos++;
+        if(sys_msg_array_pos == SYS_MSG_ARRAY_SIZE)
+        {
+            printf("Sys message reached max size\n");
+        }
         // fill with data
         msg->op_code = opcode;
         // copy data

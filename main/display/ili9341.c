@@ -216,7 +216,7 @@ void init_display()
         .max_transfer_sz= SCREEN_WIDTH * 2 * SCREEN_SEND_HEIGHT,
     };
     spi_device_interface_config_t devcfg={
-        .clock_speed_hz=26*1000*1000,           //Clock out at 26 MHz
+        .clock_speed_hz=40*1000*1000,           //Clock out at 26 MHz
         .mode=0,                                //SPI mode 0
         .spics_io_num=DISPLAY_SPI_CS_PIN,               //CS pin
         .queue_size=7,                          //We want to be able to queue 7 transactions at a time
