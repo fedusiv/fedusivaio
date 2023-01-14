@@ -4,6 +4,7 @@
 #include "memory_manager.h"
 #include "audio/audio_config.h"
 #include "display/display_config.h"
+#include "types.h"
 
 
 // memory segments
@@ -11,6 +12,7 @@
 float audio_samples_buffer_l[SAMPLES_BUFFER_SIZE];
 float audio_samples_buffer_r[SAMPLES_BUFFER_SIZE];
 uint32_t audio_samples_buffer_send[SAMPLES_BUFFER_SIZE];
+float audio_waveforms_buffer[WAVEFORM_TYPE_MAX][WAVEFORM_CNT];
 
 // Display field
 uint16_t * display_frame_buffer;
@@ -62,4 +64,12 @@ uint16_t * get_display_dma_buffer()
 uint16_t * get_display_soundwave_graph()
 {
     return display_soundwave_graph;
+}
+
+void get_audio_osc_waveforms(float ** pnt)
+{
+    for(u8 i = 0; i < WAVEFORM_TYPE_MAX; i++)
+    {
+        pnt[i] = audio_waveforms_buffer[i];
+    }
 }

@@ -23,6 +23,7 @@
 
 #define POLYPHONY_AMOUNT 4
 #define ADSR_PROCESS_FREQ 4 // frequency of processing adsr, if 4 means, that adsr will process each 4th sample
+#define OSC_AMOUNT 4 // amount of oscillators for one voice
 
 #define PI               (3.14159265)
 #define PI2              (6.28318530)

@@ -10,5 +10,6 @@ uint16_t * get_display_frame_buffer();
 uint16_t * get_display_dma_buffer();
 uint16_t * get_display_soundwave_graph();
 uint32_t * get_memory_audio_send_buffer();
+void get_audio_osc_waveforms(float ** pnt);
 
 #endif // __MEMORY_MANAGER_H__

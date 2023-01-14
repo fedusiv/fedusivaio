@@ -5,6 +5,7 @@
 
 #include "audio_config.h"
 #include "sound_adsr.h"
+#include "sound_osc.h"
 
 typedef struct _synth_voice_t
 {
@@ -14,11 +15,10 @@ typedef struct _synth_voice_t
     adsr_struct_t adsr;
 } synth_voice_t;
 
-static uint32_t notes_pitch[NOTES_COUNT];
-static float sinewave_form[WAVEFORM_CNT];
 static synth_voice_t s_synth_voices[POLYPHONY_AMOUNT];
 static adsr_struct_t s_adsr_parameters;
 static audio_octaves_e s_current_octave;
+static sound_osc_struct_t s_osc_array[OSC_AMOUNT];
 static float s_common_volume;
 
 synth_voice_t  * get_free_synth_voice(uint16_t note_id);
@@ -65,6 +65,8 @@ void synth_process(float * sample_l, float * sample_r)
     float adsr_ampl = 0.0f;
     uint16_t i_s, i_v; // index sample, index voice
     synth_voice_t  * voice;
+    //u32 temp_sample_pos;
+    //float temp_signal = 0.0f;
 
     memset(sample_l, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
     memset(sample_r, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
@@ -77,8 +79,9 @@ void synth_process(float * sample_l, float * sample_r)
             {
                 continue;
             }
-            voice->sample_pos += notes_pitch[voice->note_id];
-            signal = sinewave_form[WAVEFORM_I(voice->sample_pos)];
+            voice->sample_pos = calculate_osc(s_osc_array,voice->sample_pos , voice->note_id, &signal);
+            //printf("New sample_pos: %u signal: %f\n", (int)voice->sample_pos, signal);
+
             // adsr part
             if(i_s % ADSR_PROCESS_FREQ == 0)
             {
@@ -124,22 +127,9 @@ synth_voice_t * get_free_synth_voice(uint16_t note_id)
 
 void sound_engine_init()
 {
-    float tmp_value;
-    uint32_t tmp_value2;
     uint16_t i = 0;
 
-    for(i = 0; i < WAVEFORM_CNT; i++)
-    {
-        tmp_value = sinf(i * PI2 / WAVEFORM_CNT);
-        sinewave_form[i] = tmp_value;
-    }
-
-    for(i = 0; i < NOTES_COUNT; i++)
-    {
-        tmp_value = ((pow(2.0f, (float)(i) / 12.0f) * NOTE_FREQ_BASE)); 
-        tmp_value2 = (uint32_t)(tmp_value * ((float)(1ULL << 32ULL) / ((float)SAMPLE_RATE)));
-        notes_pitch[i] = tmp_value2;
-    }
+    init_osc();
 
     for(i=0; i < POLYPHONY_AMOUNT; i++)
     {
@@ -155,6 +145,18 @@ void sound_engine_init()
     s_adsr_parameters.decay_ampl = 0.4f;
     s_adsr_parameters.release_duration = 0.1f;
 
+    s_osc_array[0].active = 1;
+    s_osc_array[0].amp = 1.0f;
+    s_osc_array[0].osc_type = WAVEFORM_TYPE_SINE;
+    s_osc_array[0].pitch = 0;
+
+    s_osc_array[1].active = 1;
+    s_osc_array[1].amp = .4f;
+    s_osc_array[1].osc_type = WAVEFORM_TYPE_SAW;
+    s_osc_array[1].pitch = 0;
+
+    s_osc_array[2].active = 0;
+    s_osc_array[3].active = 0;
 }
 
 uint16_t get_note_id(audio_note_e note)

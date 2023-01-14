@@ -10,6 +10,7 @@ set( audio_src "audio/audio_hw.c"
             "audio/audio_module.c"
             "audio/sound_engine.c"
             "audio/sound_adsr.c"
+            "audio/sound_osc.c"
                 )
 set( memory_src "memory/memory_manager.c"
                 )
