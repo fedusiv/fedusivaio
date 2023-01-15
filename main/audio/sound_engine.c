@@ -78,8 +78,8 @@ void synth_process(float * sample_l, float * sample_r)
             {
                 continue;
             }
-            signal = calculate_osc(s_osc_array, voice->note_id);
-            //printf("New sample_pos: %u signal: %f\n", (int)voice->sample_pos, signal);
+            // All osc calculation is in this function
+            signal = calculate_osc(voice->osc, voice->note_id);
 
             // adsr part
             if(i_s % ADSR_PROCESS_FREQ == 0)
@@ -146,19 +146,23 @@ void sound_engine_init()
 
     s_osc_array[0].active = 1;
     s_osc_array[0].amp = 1.0f;
-    s_osc_array[0].osc_type = WAVEFORM_TYPE_SAW;
+    s_osc_array[0].osc_type = WAVEFORM_TYPE_SINE;
     s_osc_array[0].pitch = 0;
     s_osc_array[0].sample_pos = 0;
 
     s_osc_array[1].active = 1;
-    s_osc_array[1].amp = .5f;
-    s_osc_array[1].osc_type = WAVEFORM_TYPE_SINE;
+    s_osc_array[1].amp = .3f;
+    s_osc_array[1].osc_type = WAVEFORM_TYPE_SAW;
     s_osc_array[1].pitch = -12;
     s_osc_array[1].sample_pos = 0;
 
     s_osc_array[2].active = 0;
-    s_osc_array[3].active = 0;
+    s_osc_array[2].amp = .3f;
+    s_osc_array[2].osc_type = WAVEFORM_TYPE_SQUARE;
+    s_osc_array[2].pitch = 12;
     s_osc_array[2].sample_pos = 0;
+
+    s_osc_array[3].active = 0;
     s_osc_array[3].sample_pos = 0;
 }
 
