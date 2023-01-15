@@ -9,10 +9,10 @@
 
 typedef struct _synth_voice_t
 {
-    uint8_t active;
-    uint16_t note_id;
-    uint32_t sample_pos;
+    u8 active;
+    u16 note_id;
     adsr_struct_t adsr;
+    sound_osc_struct_t osc[OSC_AMOUNT];
 } synth_voice_t;
 
 static synth_voice_t s_synth_voices[POLYPHONY_AMOUNT];
@@ -34,8 +34,9 @@ void synth_note_on(uint16_t note_id)
         return;
     }
     voice->active = 1;
+    // initialize oscs
+    memcpy(voice->osc, s_osc_array, sizeof(sound_osc_struct_t) * OSC_AMOUNT);
     voice->note_id = note_id;
-    voice->sample_pos = 0;
     adsr_init(&s_adsr_parameters, &voice->adsr);
 
 }
@@ -65,8 +66,6 @@ void synth_process(float * sample_l, float * sample_r)
     float adsr_ampl = 0.0f;
     uint16_t i_s, i_v; // index sample, index voice
     synth_voice_t  * voice;
-    //u32 temp_sample_pos;
-    //float temp_signal = 0.0f;
 
     memset(sample_l, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
     memset(sample_r, 0, sizeof(float) * SAMPLES_BUFFER_SIZE);
@@ -79,7 +78,7 @@ void synth_process(float * sample_l, float * sample_r)
             {
                 continue;
             }
-            voice->sample_pos = calculate_osc(s_osc_array,voice->sample_pos , voice->note_id, &signal);
+            signal = calculate_osc(s_osc_array, voice->note_id);
             //printf("New sample_pos: %u signal: %f\n", (int)voice->sample_pos, signal);
 
             // adsr part
@@ -147,16 +146,20 @@ void sound_engine_init()
 
     s_osc_array[0].active = 1;
     s_osc_array[0].amp = 1.0f;
-    s_osc_array[0].osc_type = WAVEFORM_TYPE_SINE;
+    s_osc_array[0].osc_type = WAVEFORM_TYPE_SAW;
     s_osc_array[0].pitch = 0;
+    s_osc_array[0].sample_pos = 0;
 
     s_osc_array[1].active = 1;
-    s_osc_array[1].amp = .4f;
-    s_osc_array[1].osc_type = WAVEFORM_TYPE_SAW;
-    s_osc_array[1].pitch = 0;
+    s_osc_array[1].amp = .5f;
+    s_osc_array[1].osc_type = WAVEFORM_TYPE_SINE;
+    s_osc_array[1].pitch = -12;
+    s_osc_array[1].sample_pos = 0;
 
     s_osc_array[2].active = 0;
     s_osc_array[3].active = 0;
+    s_osc_array[2].sample_pos = 0;
+    s_osc_array[3].sample_pos = 0;
 }
 
 uint16_t get_note_id(audio_note_e note)

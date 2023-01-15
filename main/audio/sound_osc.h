@@ -10,10 +10,11 @@ typedef struct _sound_osc_struct_t
     audio_waveform_types_e osc_type;
     float amp;
     i8 pitch;
+    u32 sample_pos;
 }sound_osc_struct_t;
 
 
 void init_osc();
-u32 calculate_osc(sound_osc_struct_t * osc_array, u32 sample_pos, u16 note_id, float * signal);
+float calculate_osc(sound_osc_struct_t * osc_array, u16 note_id);
 
 #endif // __SOUND_OSC_H__

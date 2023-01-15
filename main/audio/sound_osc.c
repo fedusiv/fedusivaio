@@ -35,14 +35,11 @@ void init_osc()
 
 }
 
-u32 calculate_osc(sound_osc_struct_t * osc_array, u32 sample_pos, u16 note_id, float * signal)
+float calculate_osc(sound_osc_struct_t * osc_array, u16 note_id)
 {
-    float cur_signal;
-    u32 pitch_sample_pos;
+    float cur_signal = 0.0f;
 
     sound_osc_struct_t * osc;
-    *signal = 0.0f;
-    sample_pos += notes_pitch[note_id]; // get current position
     for(u8 i = 0; i < OSC_AMOUNT; i++)
     {
         osc = &osc_array[i];
@@ -50,11 +47,9 @@ u32 calculate_osc(sound_osc_struct_t * osc_array, u32 sample_pos, u16 note_id, f
         {
             continue;
         }
-        cur_signal = 0.0f;
-        pitch_sample_pos = sample_pos + osc->pitch;
-        cur_signal = s_waveform_data[osc->osc_type][WAVEFORM_I(pitch_sample_pos)];
-        *signal = osc->amp * cur_signal;
+        osc->sample_pos += notes_pitch[note_id + osc->pitch]; // TODO: need to add limit of existing limit for octaves
+        cur_signal += osc->amp * s_waveform_data[osc->osc_type][WAVEFORM_I(osc->sample_pos)];
     }
 
-    return sample_pos;
+    return cur_signal;
 }
