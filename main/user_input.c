@@ -13,7 +13,7 @@
 #define PRESS_BUTTON_DEBOUNCE 5
 #define RELEASE_BUTTON_DEBOUNCE 2
 #define ENCODER_DEBOUCE 2
-#define SHIFT_REGISTER_OUTPUTS 16 // amount of all outputs connected to shift register
+#define SHIFT_REGISTER_OUTPUTS 24 // amount of all outputs connected to shift register
 
 typedef struct
 {
@@ -50,6 +50,7 @@ button_state_t buttons_state[BUTTON_ID_MAX]=
     {0,0,0,0,10, BUTTON_ID_Ab},
     {0,0,0,0,11, BUTTON_ID_B},
     {1,1,0,0,14, BUTTON_ID_ENC_1},
+    {1,1,0,0,16, BUTTON_ID_JS_1},
 };
 
 encoder_state_t encoders_state[ENCODER_ID_MAX]=

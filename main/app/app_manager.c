@@ -68,7 +68,7 @@ static void input_process()
             break;
         case INPUT_OP_BUTTON_PRESSED:
             printf("Button %d pressed\n", act.id);
-            if(act.id == BUTTON_ID_ENC_1)
+            if(act.id == BUTTON_ID_ENC_1 || act.id == BUTTON_ID_JS_1)   // temporary
             {
                 break;
             }
