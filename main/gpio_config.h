@@ -1,6 +1,8 @@
 #ifndef  __GPIO_CONFIG_H__
 #define __GPIO_CONFIG_H__ 
 
+// if look into gpio pinout on official website. It related to name column or gpioX name
+
 #define DISPLAY_SPI_CS_PIN 10
 #define DISPLAY_SPI_MOSI_PIN 11
 #define DISPLAY_SPI_MISO_PIN  14
@@ -16,6 +18,11 @@
 #define INPUT_SIN 18
 #define INPUT_CLK 17
 #define INPUT_TRIG 16
+
+#define JOYSTICK_X_PIN 3
+#define JOYSTICK_Y_PIN 8
+#define JOYSTICK_X_ADC_CH 2
+#define JOYSTICK_Y_ADC_CH 7
 
 
 typedef enum

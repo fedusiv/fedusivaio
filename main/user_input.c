@@ -3,6 +3,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
+#include "esp_adc/adc_oneshot.h"
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
 
 #include "hal/gpio_types.h"
 #include "user_input.h"
@@ -35,6 +38,18 @@ typedef struct
     encoders_id_e id; // encoder id
 }encoder_state_t;
 
+typedef struct
+{
+    adc_oneshot_unit_handle_t adc_handle;
+    adc_cali_handle_t cali_handle;
+    u8 adc_x_ch;
+    u8 adc_y_ch;
+    u8 calibrated;
+    u16 middlepos;
+    u16 treshold;
+    u8 position;
+}joystick_state_t;
+
 button_state_t buttons_state[BUTTON_ID_MAX]=
 {
     {0,0,0,0,0, BUTTON_ID_C},
@@ -58,15 +73,19 @@ encoder_state_t encoders_state[ENCODER_ID_MAX]=
     {0,0,12,13,0,ENCODER_ID_1},
 };
 
+joystick_state_t joystick_state;
+
 static void init_gpio();
 static void process_buttons();
 static void buttons_encoders_init();
+static void joystick_init();
 static uint32_t hw_read_inputs();
 
 void xUserInputTask(void * task_parameter)
 {
     init_gpio();
     buttons_encoders_init();
+    joystick_init();
     while(1)
     {
         process_buttons();
@@ -102,6 +121,41 @@ static void buttons_encoders_init()
     }
 }
 
+static void joystick_init()
+{
+    u8 ret;
+    // Here is basically adc init for joystick x/y axis reading values
+
+    joystick_state.cali_handle = NULL;
+    joystick_state.adc_x_ch = JOYSTICK_X_ADC_CH;
+    joystick_state.adc_y_ch = JOYSTICK_Y_ADC_CH;
+
+    adc_oneshot_unit_init_cfg_t init_config = {
+        .unit_id = ADC_UNIT_1,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &joystick_state.adc_handle));
+    adc_oneshot_chan_cfg_t config = {
+        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .atten = ADC_ATTEN_DB_11,
+    };
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(joystick_state.adc_handle, joystick_state.adc_x_ch, &config));
+    ESP_ERROR_CHECK(adc_oneshot_config_channel(joystick_state.adc_handle, joystick_state.adc_y_ch, &config));
+
+    adc_cali_curve_fitting_config_t cali_config = {
+        .unit_id = ADC_UNIT_1,
+        .atten = ADC_ATTEN_DB_11,
+        .bitwidth = ADC_BITWIDTH_12 ,
+    };
+    ret = adc_cali_create_scheme_curve_fitting(&cali_config, &joystick_state.cali_handle);
+    if(ret == ESP_OK)
+    {
+        joystick_state.calibrated = 1;
+    }
+    joystick_state.position = 0;
+    joystick_state.middlepos = 1700;    // position where joystick in neural or middle position
+    joystick_state.treshold = 1000;    // amount of points to any side to determine, that joystick is changed position
+}
+
 static uint32_t hw_read_inputs()
 {
     uint8_t read_gpio = 0;
@@ -135,6 +189,9 @@ static void process_buttons()
     input_action_t current_action;
     button_state_t * button;
     encoder_state_t * encoder;
+    int adc_raw, adc_cali;
+    u8 joystick_curr_pos = 0;   // by default it's neutral position
+
 
     // reading inputs
     read_result = hw_read_inputs();
@@ -224,6 +281,36 @@ static void process_buttons()
             create_message(OP_USER_INPUT_ACTION, (uint8_t *)&current_action, MSG_DST_APP, 10);
         }
 
+    }
+    
+    // joystick axis handle
+    // read first x axis
+    ESP_ERROR_CHECK(adc_oneshot_read(joystick_state.adc_handle, joystick_state.adc_x_ch, &adc_raw));
+    ESP_ERROR_CHECK(adc_cali_raw_to_voltage(joystick_state.cali_handle, adc_raw, &adc_cali));
+    //printf("Josystick X pos %d ", adc_cali);
+    if(adc_cali > joystick_state.middlepos + joystick_state.treshold)
+    {
+        joystick_curr_pos |= JOYSTICK_POS_RIGHT;
+    }
+    else if(adc_cali < joystick_state.middlepos - joystick_state.treshold)
+    {
+        joystick_curr_pos |= JOYSTICK_POS_LEFT;
+    }
+    ESP_ERROR_CHECK(adc_oneshot_read(joystick_state.adc_handle, joystick_state.adc_y_ch, &adc_raw));
+    ESP_ERROR_CHECK(adc_cali_raw_to_voltage(joystick_state.cali_handle, adc_raw, &adc_cali));
+    //printf(" Y pos %d \n", adc_cali);
+    if(adc_cali > joystick_state.middlepos + joystick_state.treshold)
+    {
+        joystick_curr_pos |= JOYSTICK_POS_UP;
+    }
+    else if(adc_cali < joystick_state.middlepos - joystick_state.treshold)
+    {
+        joystick_curr_pos |= JOYSTICK_POS_DOWN;
+    }
+    if(joystick_curr_pos != joystick_state.position)
+    {
+        printf("Josystick changed position to: %d \n", joystick_curr_pos);
+        joystick_state.position = joystick_curr_pos;
     }
 
 }
